@@ -1,6 +1,10 @@
 package com.jesusLuna.polyglotCloud.models;
 
+import java.time.Instant;
 import java.util.UUID;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,5 +37,13 @@ public class Language {
     @Size(max = 20, message = "Language code cannot exceed 20 characters")
     @Column(nullable = false, unique = true, length = 20)
     private String code;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
 }

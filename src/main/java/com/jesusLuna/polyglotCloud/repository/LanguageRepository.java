@@ -15,7 +15,7 @@ public interface LanguageRepository  extends JpaRepository<Language, UUID>{
 
     Optional<Language> findByCode(String code);
     Optional<Language> findByName(String name);
-    List<Language> findByActiveTrueOrderByNameAsc();
+    List<Language> findAllByOrderByNameAsc();
 
     /**
      * 📊 Estadísticas
@@ -25,7 +25,6 @@ public interface LanguageRepository  extends JpaRepository<Language, UUID>{
         SELECT l.id, l.name, COUNT(s.id)
         FROM Language l
         LEFT JOIN Snippet s ON s.language.id = l.id AND s.status = 'PUBLISHED' AND s.isPublic = true
-        WHERE l.active = true
         GROUP BY l.id, l.name
         ORDER BY COUNT(s.id) DESC
     """)

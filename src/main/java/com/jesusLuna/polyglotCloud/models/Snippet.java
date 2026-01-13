@@ -70,9 +70,9 @@ public class Snippet {
     @JoinColumn(name = "language_id", nullable = false)
     private Language language;
 
-    @NotNull(message = "User ID is required")
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     public void archive() {
         this.status = SnippetStatus.ARCHIVED;
@@ -96,6 +96,6 @@ public class Snippet {
     }
 
     public boolean belongsTo(UUID userId) {
-        return this.userId != null && this.userId.equals(userId);
+        return this.user.getId() != null && this.user.getId().equals(userId);
     }
 }

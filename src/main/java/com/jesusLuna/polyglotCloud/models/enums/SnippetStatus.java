@@ -1,7 +1,7 @@
 package com.jesusLuna.polyglotCloud.models.enums;
 
 public enum SnippetStatus {
- /**
+    /**
      * Estado de borrador. El snippet está en proceso de edición.
      */
     DRAFT,

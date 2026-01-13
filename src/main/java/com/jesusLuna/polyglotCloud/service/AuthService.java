@@ -1,19 +1,18 @@
 package com.jesusLuna.polyglotCloud.service;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.DTO.UserDTO;
-import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
-import com.jesusLuna.polyglotCloud.Security.JwtTokenProvider;
-import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.dto.UserDTO;
+import com.jesusLuna.polyglotCloud.dto.UserDTO.AuthResponseWithCookies;
+import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.repository.UserRespository;
 
@@ -29,6 +28,7 @@ public class AuthService {
     private final PostQuantumPasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenProvider jwtTokenProvider;
+    //TODO: A los que sea de solo lectura poner en el trasactional @readOnly = true
 
 
     @Transactional
@@ -73,7 +73,7 @@ public class AuthService {
     }
 
     @Transactional
-    public UserDTO.UserLoginResponse login(UserDTO.UserLoginRequest request, String ipAddress, String userAgent) {
+    public UserDTO.AuthResponseWithCookies login(UserDTO.UserLoginRequest request, String ipAddress, String userAgent) {
         String login = request.login();
         String password = request.password();
         
@@ -120,17 +120,24 @@ public class AuthService {
             
             Instant expiresAt = jwtTokenProvider.getExpirationFromToken(token);
             
-            // Generate refresh token
-            var refreshToken = refreshTokenService.createRefreshToken(user.getId(), ipAddress, userAgent);
             
             log.info("Login successful for user: {}", user.getUsername());
             
-            return new UserDTO.UserLoginResponse( // ← Cambiado de UserDto a UserDTO
+           // 1. Crear el refresh token
+            var refreshTokenEntity = refreshTokenService.createRefreshToken(user.getId(), ipAddress, userAgent);
+            
+            // 2. Crear respuesta JSON (Solo Access Token y User)
+            var responseBody = new UserDTO.UserLoginResponse(
                     token,
-                    refreshToken.getToken(),
                     toUserResponse(user),
-                    expiresAt,
-                    refreshToken.getExpiresAt()
+                    expiresAt
+            );
+
+            // 3. Devolver todo empaquetado
+            return new AuthResponseWithCookies(
+                    responseBody,
+                    refreshTokenEntity.getToken(),
+                    refreshTokenEntity.getExpiresAt()
             );
             
         } catch (BadCredentialsException ex) {
@@ -162,7 +169,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void logoutAll(java.util.UUID userId) {
+    public void logoutAll(UUID userId) {
         log.info("Logging out user from all devices: {}", userId);
         
         refreshTokenService.revokeAllUserTokens(userId);
@@ -191,7 +198,7 @@ public class AuthService {
     }
 
     @Transactional
-    public UserDTO.UserLoginResponse refreshTokens(String refreshTokenString, String ipAddress, String userAgent) {
+    public UserDTO.AuthResponseWithCookies refreshTokens(String refreshTokenString, String ipAddress, String userAgent) {
         log.info("Refreshing tokens using refresh token");
         
         // Validate and rotate refresh token
@@ -217,44 +224,16 @@ public class AuthService {
         
         log.info("Tokens refreshed successfully for user: {}", user.getUsername());
         
-        return new UserDTO.UserLoginResponse(
+        var responseBody = new UserDTO.UserLoginResponse(
                 accessToken,
+                toUserResponse(user),
+                expiresAt
+        );
+        
+        return new AuthResponseWithCookies(
+                responseBody,
                 newRefreshToken.getToken(),
-                toUserResponse(user),
-                expiresAt,
                 newRefreshToken.getExpiresAt()
-        );
-    }
-
-    @Transactional(readOnly = true)
-    public UserDTO.UserLoginResponse refreshToken(java.util.UUID userId) {
-        log.info("Refreshing token for user: {}", userId);
-        
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        
-        if (!user.isActive() || !user.isEmailVerified()) {
-            throw new BusinessRuleException("User account is not active or email not verified");
-        }
-        
-        // Generate new JWT token
-        String token = jwtTokenProvider.generateToken(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole()
-        );
-        
-        Instant expiresAt = jwtTokenProvider.getExpirationFromToken(token);
-        
-        log.info("Token refreshed successfully for user: {}", user.getUsername());
-        
-        return new UserDTO.UserLoginResponse(
-                token,
-                null,  // No new refresh token in old endpoint
-                toUserResponse(user),
-                expiresAt,
-                null
         );
     }
 

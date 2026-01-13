@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.Security;
+package com.jesusLuna.polyglotCloud.security;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -32,7 +32,7 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration}") long expirationMs,
+            @Value("${app.jwt.expiration-ms}") long expirationMs,
             @Value("${app.jwt.refresh-expiration:604800000}") long refreshExpirationMs,
             @Value("${app.jwt.issuer}") String issuer) {
         

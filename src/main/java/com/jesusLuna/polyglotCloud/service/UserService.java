@@ -7,11 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.DTO.UserDTO;
-import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
-import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.dto.UserDTO;
+import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRespository;

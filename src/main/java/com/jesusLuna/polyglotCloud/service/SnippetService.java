@@ -7,15 +7,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.DTO.SnippetDTO;
-import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.dto.SnippetDTO;
+import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.Language;
 import com.jesusLuna.polyglotCloud.models.Snippet;
+import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.SnippetStatus;
 import com.jesusLuna.polyglotCloud.repository.LanguageRepository;
 import com.jesusLuna.polyglotCloud.repository.SnippetRepository;
+import com.jesusLuna.polyglotCloud.repository.UserRespository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class SnippetService {
 
     private final SnippetRepository snippetRepository;
     private final LanguageRepository languageRepository;
+    private final UserRespository userRepository;
 
     @Transactional
     public Snippet createSnippet(SnippetDTO.SnippetCreateRequest request, UUID userId) {
@@ -42,13 +45,17 @@ public class SnippetService {
         Language language = languageRepository.findById(request.languageId())
                 .orElseThrow(() -> new ResourceNotFoundException("Language", "id", request.languageId()));
 
+         // Necesitas inyectar UserRepository arriba si no lo tienes ya
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
         // Crear el snippet
         Snippet snippet = Snippet.builder()
                 .title(request.title())
                 .content(request.code())
                 .description(request.description())
                 .language(language)
-                .userId(userId)
+                .user(user)
                 .status(SnippetStatus.DRAFT)
                 .isPublic(request.isPublic() != null ? request.isPublic() : false)
                 .build();
@@ -79,6 +86,11 @@ public class SnippetService {
         return snippetRepository.findByUserId(userId, pageable);
     }
 
+    public Page<Snippet> listSnippetsByUserAndStatus(SnippetStatus status, UUID userId,  Pageable pageable){
+        log.debug("Listing snippets with status: {} for user: {} with pageable: {}", status, userId, pageable);
+        return snippetRepository.findByUserIdAndStatus(userId, status, pageable);
+    }
+
     public Page<Snippet> searchSnippets(SnippetDTO.SnippetSearchFilters filters, Pageable pageable) {
         log.debug("Searching snippets with filters: {}", filters);
         return snippetRepository.searchSnippets(
@@ -91,23 +103,19 @@ public class SnippetService {
         );
     }
 
-    public Page<Snippet> searchSnippets(String query, UUID userId, UUID languageId, SnippetStatus status, Pageable pageable) {
-        log.debug("Full-text search with query: {}, userId: {}, languageId: {}, status: {}", 
-                query, userId, languageId, status);
+    public Page<Snippet> searchSnippets(
+            String query,
+            UUID userId,
+            UUID languageId,
+            SnippetStatus status,
+            Boolean isPublic,
+            Pageable pageable) {
+        
+        log.debug("Searching snippets with query: '{}', userId: {}, languageId: {}, status: {}, isPublic: {}", 
+                query, userId, languageId, status, isPublic);
 
-        // If filters are provided, use filtered search
-        if (userId != null || languageId != null || status != null) {
-            return snippetRepository.fullTextSearchWithFilters(
-                    query,
-                    userId != null ? userId.toString() : null,
-                    languageId != null ? languageId.toString() : null,
-                    status != null ? status.name() : null,
-                    pageable
-            );
-        }
-
-        // Otherwise, use public-only search
-        return snippetRepository.fullTextSearch(query, pageable);
+        // Usamos el método unificado y optimizado del repositorio
+        return snippetRepository.searchSnippets(query, userId, languageId, status, isPublic, pageable);
     }
 
     @Transactional

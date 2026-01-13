@@ -43,10 +43,6 @@ public class User {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @NotBlank(message = "Token is required")
-    @Column(nullable = false, unique = true, length = 512)
-    private String token;
-
     @NotBlank
     @Email
     @Size(max = 255)

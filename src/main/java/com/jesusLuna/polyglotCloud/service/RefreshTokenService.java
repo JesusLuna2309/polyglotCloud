@@ -8,9 +8,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
-import com.jesusLuna.polyglotCloud.Security.JwtTokenProvider;
+import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
+import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.RefreshToken;
 import com.jesusLuna.polyglotCloud.repository.Specification.RefreshTokenRepository;
 

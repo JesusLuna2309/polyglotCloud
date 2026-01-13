@@ -5,12 +5,12 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.jesusLuna.polyglotCloud.models.Language;
 import com.jesusLuna.polyglotCloud.models.Snippet;
 import com.jesusLuna.polyglotCloud.models.enums.SnippetStatus;
 
@@ -19,22 +19,27 @@ public interface SnippetRepository extends JpaRepository<Snippet, UUID> {
 
     // Búsquedas básicas y paginadas
     Optional<Snippet> findByTitle(String title);
+    @EntityGraph(attributePaths = {"user","language"})
     Page<Snippet> findByUserId(UUID userId, Pageable pageable);
-    Page<Snippet> findByLanguage(Language language, Pageable pageable);
-    Page<Snippet> findByLanguage_Id(UUID languageId, Pageable pageable);
+    @EntityGraph(attributePaths = {"user","language"})
+    Page<Snippet> findByLanguageId(UUID languageId, Pageable pageable);
+
+    //TODO: Mejora final cachear la tabla language
+    @EntityGraph(attributePaths = {"user", "language"})
     Page<Snippet> findByStatus(SnippetStatus status, Pageable pageable);
 
     // Búsqueda de Snippets Públicos
     @Query("""
         SELECT s FROM Snippet s
+        JOIN FETCH s.user
+        JOIN FETCH s.language
         WHERE s.status = 'PUBLISHED' AND s.isPublic = true
         ORDER BY s.createdAt DESC
     """)
     Page<Snippet> findAllPublic(Pageable pageable);
 
+    @EntityGraph( attributePaths = {"user", "language"})
     Page<Snippet> findByUserIdAndStatus(UUID userId, SnippetStatus status, Pageable pageable);
-
-    Page<Snippet> findByUserIdAndIsPublic(UUID userId, boolean isPublic, Pageable pageable);
 
     /**
      * 🔍 Buscador Principal (Search Engine)
@@ -42,10 +47,12 @@ public interface SnippetRepository extends JpaRepository<Snippet, UUID> {
      */
     @Query("""
         SELECT s FROM Snippet s
+        JOIN FETCH s.user
+        JOIN FETCH s.language
         WHERE (:query IS NULL OR
             LOWER(s.title) LIKE LOWER(CONCAT('%', :query, '%')) OR
             LOWER(s.description) LIKE LOWER(CONCAT('%', :query, '%')))
-        AND (:userId IS NULL OR s.userId = :userId)
+        AND (:userId IS NULL OR s.user.id = :userId)
         AND (:languageId IS NULL OR s.language.id = :languageId)
         AND (:status IS NULL OR s.status = :status)
         AND (:isPublic IS NULL OR s.isPublic = :isPublic)
@@ -88,6 +95,8 @@ public interface SnippetRepository extends JpaRepository<Snippet, UUID> {
 
     @Query("""
             SELECT s FROM Snippet s
+            JOIN FETCH s.user
+            JOIN FETCH s.language
             WHERE s.language.id = :languageId
             AND s.status = 'PUBLISHED'
             AND s.isPublic = true
@@ -97,7 +106,7 @@ public interface SnippetRepository extends JpaRepository<Snippet, UUID> {
 
     boolean existsByTitle(String title);
 
-    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Snippet s WHERE s.id = :id AND s.userId = :userId")
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Snippet s WHERE s.id = :id AND s.user.id = :userId")
     boolean existsByIdAndUserId(@Param("id") UUID id, @Param("userId") UUID userId);
 
     @Query("SELECT COUNT(s) FROM Snippet s WHERE s.status = 'PUBLISHED' AND s.isPublic = true")

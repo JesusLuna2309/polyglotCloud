@@ -23,7 +23,7 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
 
     Optional<User> findByUsernameOrEmail(String username, String email);
 
-    Optional<User> findByUsernameOrEmailAndPassword(String username, String email, String password);
+    Optional<User> findByUsernameOrEmailAndPasswordHash(String username, String email, String passwordHash);
 
     Optional<User> findByEmailVerificationToken(String token); // VERIFY EMAIL
 
@@ -42,21 +42,17 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
     Page<User> findByEmailVerifiedFalse(Pageable pageable);
 
 
-    @Query("""
-                        SELECT u FROM User u
-                        WHERE (:query IS NULL OR
-                        LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR
-                        LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')) OR
-                        LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR
-                        LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')))
-                        AND (:role IS NULL OR u.role = :role)
-                        AND (:active IS NULL OR u.active = :active)
-                        """)
-        Page<User> searchUsers(
-                        @Param("query") String query,
-                        @Param("role") Role role,
-                        @Param("active") Boolean active,
-                        Pageable pageable);
+    @Query("SELECT u FROM User u " +
+        "WHERE (:query IS NULL OR " +
+        "LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+        "LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+        "AND (:role IS NULL OR u.role = :role) " +
+        "AND (:active IS NULL OR u.active = :active)")
+    Page<User> searchUsers(
+        @Param("query") String query,
+        @Param("role") Role role,
+        @Param("active") Boolean active,
+        Pageable pageable);
 
 
         

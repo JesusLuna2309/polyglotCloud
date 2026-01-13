@@ -1,6 +1,9 @@
-package com.jesusLuna.polyglotCloud.Security;
+package com.jesusLuna.polyglotCloud.security;
 
 import org.junit.jupiter.api.Test;
+
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
+
 import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
