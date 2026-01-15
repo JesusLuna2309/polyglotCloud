@@ -45,6 +45,7 @@ public class AuthController {
     @Value("${app.jwt.cookie.name}")
     private String cookieName;
 
+    //TODO: Configurar en el JWT la expiracion de la cookie
     @Value("${app.jwt.cookie.expiration-s}")
     private long cookieExpirationSeconds;
 

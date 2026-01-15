@@ -1,11 +1,11 @@
 package com.jesusLuna.polyglotCloud.security;
 
-import org.junit.jupiter.api.Test;
-
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
-
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class PostQuantumPasswordEncoderTest {
     

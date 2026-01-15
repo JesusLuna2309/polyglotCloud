@@ -57,7 +57,7 @@ public class SnippetService {
                 .language(language)
                 .user(user)
                 .status(SnippetStatus.DRAFT)
-                .isPublic(request.isPublic() != null ? request.isPublic() : false)
+                .isPublic(Boolean.TRUE.equals(request.isPublic()))
                 .build();
 
         Snippet saved = snippetRepository.save(snippet);
@@ -260,7 +260,7 @@ public Snippet translateSnippet(UUID originalId, SnippetDTO.SnippetTranslateRequ
             .user(user)
             .originalSnippet(originalSnippet) // IMPORTANTE: Vincular con el original
             .status(SnippetStatus.DRAFT) // Siempre empieza como borrador
-            .isPublic(request.isPublic() != null ? request.isPublic() : originalSnippet.isPublic()) // Hereda visibilidad
+            .isPublic(request.isPublic() != null ? Boolean.TRUE.equals(request.isPublic()) : originalSnippet.isPublic()) // Hereda visibilidad
             .build();
 
     Snippet savedTranslation = snippetRepository.save(translation);
