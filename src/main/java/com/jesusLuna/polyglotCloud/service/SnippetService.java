@@ -211,6 +211,68 @@ public class SnippetService {
         return archived;
     }
 
+    @Transactional
+public Snippet translateSnippet(UUID originalId, SnippetDTO.SnippetTranslateRequest request, UUID userId) {
+    log.debug("Creating translation of snippet {} to language {} for user: {}",
+            originalId, request.languageId(), userId);
+
+    // 1. Obtener el snippet original
+    Snippet originalSnippet = getSnippetById(originalId);
+
+    // 2. Verificar permisos: Solo el autor puede crear traducciones
+    if (!originalSnippet.belongsTo(userId)) {
+        throw new ForbiddenAccessException("Only the author can create translations of this snippet");
+    }
+
+    // 3. Obtener el lenguaje de destino
+    Language targetLanguage = languageRepository.findById(request.languageId())
+            .orElseThrow(() -> new ResourceNotFoundException("Language", "id", request.languageId()));
+
+    // 4. Validar que no sea el mismo lenguaje
+    if (originalSnippet.getLanguage().getId().equals(request.languageId())) {
+        throw new BusinessRuleException("Cannot translate to the same language");
+    }
+
+    // 5. Verificar que no exista ya una traducción a este lenguaje
+    // (Opcional: Si quieres permitir solo una traducción por lenguaje)
+    boolean translationExists = snippetRepository.existsByOriginalSnippetIdAndLanguageId(
+        originalSnippet.getId(), request.languageId()
+    );
+    if (translationExists) {
+        throw new BusinessRuleException("A translation to this language already exists");
+    }
+
+    // 6. Validar título único
+    if (snippetRepository.existsByTitle(request.title())) {
+        throw new BusinessRuleException("A snippet with this title already exists");
+    }
+
+    // 7. Obtener el usuario
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+    // 8. Crear la traducción
+    Snippet translation = Snippet.builder()
+            .title(request.title())
+            .content(request.code())
+            .description(request.description() != null ? request.description() : originalSnippet.getDescription())
+            .language(targetLanguage)
+            .user(user)
+            .originalSnippet(originalSnippet) // IMPORTANTE: Vincular con el original
+            .status(SnippetStatus.DRAFT) // Siempre empieza como borrador
+            .isPublic(request.isPublic() != null ? request.isPublic() : originalSnippet.isPublic()) // Hereda visibilidad
+            .build();
+
+    Snippet savedTranslation = snippetRepository.save(translation);
+    
+    log.info("Translation created successfully with id: {} for original snippet: {}",
+            savedTranslation.getId(), originalId);
+    
+    return savedTranslation;
+}
+
+
+
     public boolean isOwner(UUID snippetId, UUID userId) {
         return snippetRepository.existsByIdAndUserId(snippetId, userId);
     }

@@ -106,6 +106,12 @@ public interface SnippetRepository extends JpaRepository<Snippet, UUID> {
 
     boolean existsByTitle(String title);
 
+    // En SnippetRepository.java
+    @EntityGraph(attributePaths = {"user", "language"})
+    Page<Snippet> findByOriginalSnippetId(UUID originalSnippetId, Pageable pageable);
+
+    boolean existsByOriginalSnippetIdAndLanguageId(UUID originalSnippetId, UUID languageId);
+
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Snippet s WHERE s.id = :id AND s.user.id = :userId")
     boolean existsByIdAndUserId(@Param("id") UUID id, @Param("userId") UUID userId);
 

@@ -91,4 +91,21 @@ public class SnippetDTO {
                 SnippetStatus status,   // Filtra por estado
                 Boolean isPublic        // Filtra por visibilidad
         ) {}
+
+        public record SnippetTranslateRequest(
+        @NotBlank(message = "Title is required")
+        @Size(min = 1, max = 255, message = "Title must be between 1 and 255 characters")
+        String title, // Ej: "Fibonacci in Python" (basado en "Fibonacci in Java")
+        
+        @NotBlank(message = "Code is required")
+        String code, // El código en el nuevo lenguaje
+        
+        @Size(max = 1000, message = "Description cannot exceed 1000 characters")
+        String description, // Opcional: descripción específica de esta versión
+        
+        @NotNull(message = "Target language ID is required")
+        UUID languageId, // El lenguaje al que "traduces"
+        
+        Boolean isPublic // Heredará la visibilidad del original si es null
+        ) {}
 }

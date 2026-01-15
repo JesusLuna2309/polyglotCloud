@@ -1,6 +1,7 @@
 package com.jesusLuna.polyglotCloud.models;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -18,6 +19,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -73,6 +75,15 @@ public class Snippet {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+        // Referencia al snippet original (si este es una traducción)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "original_snippet_id")
+    private Snippet originalSnippet;
+
+    // Todas las traducciones de este snippet (si este es el original)
+    @OneToMany(mappedBy = "originalSnippet", fetch = FetchType.LAZY)
+    private Set<Snippet> translations;
 
     public void archive() {
         this.status = SnippetStatus.ARCHIVED;

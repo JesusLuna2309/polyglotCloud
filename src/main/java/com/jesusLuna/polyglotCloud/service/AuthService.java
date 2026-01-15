@@ -7,14 +7,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 import com.jesusLuna.polyglotCloud.dto.UserDTO;
 import com.jesusLuna.polyglotCloud.dto.UserDTO.AuthResponseWithCookies;
 import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.repository.UserRespository;
+import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -149,7 +149,7 @@ public class AuthService {
             
             throw new BusinessRuleException("Invalid credentials");
             
-        } catch (Exception ex) {
+        } catch (BusinessRuleException ex) {
             log.error("Login error for user: {}", login, ex);
             throw new BusinessRuleException("Login failed");
         }
