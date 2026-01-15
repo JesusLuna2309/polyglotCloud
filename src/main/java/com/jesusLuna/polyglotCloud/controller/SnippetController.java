@@ -1,27 +1,27 @@
 package com.jesusLuna.polyglotCloud.controller;
 
-import java.nio.file.attribute.UserPrincipal;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.data.domain.Sort;
-
-
 
 import com.jesusLuna.polyglotCloud.dto.SnippetDTO;
 import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.mapper.SnippetMapper;
 import com.jesusLuna.polyglotCloud.models.Snippet;
 import com.jesusLuna.polyglotCloud.models.User;
@@ -32,6 +32,7 @@ import com.jesusLuna.polyglotCloud.service.SnippetService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,7 +80,7 @@ public class SnippetController {
                 snippets = snippetService.listSnippetsByUserAndStatus(SnippetStatus.PUBLISHED, userId, pageable);
             }
             
-        } 
+        }
         // 2. Si piden filtrar por estado (ej: solo PUBLISHED)
         else if (status != null) {
              // Aquí asumo que quieres ver TUS snippets con ese estado
@@ -161,5 +162,64 @@ public class SnippetController {
         }
         
         return ResponseEntity.ok(snippetMapper.toDetailResponse(snippet));
+    }
+
+    @PostMapping
+    @Operation(summary = "Crear snippet", description = "Crea un nuevo snippet de código")
+    public ResponseEntity<SnippetDTO.SnippetDetailResponse> createSnippet(
+            @Valid @RequestBody SnippetDTO.SnippetCreateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 1. Obtenemos el ID del usuario logueado
+        String loginIdentifier = userDetails.getUsername();
+        
+        User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+                .orElseThrow(() -> new ForbiddenAccessException("User not found"));
+
+        // 2. Creamos el snippet
+        Snippet created = snippetService.createSnippet(request, currentUser.getId());
+        
+        // 3. Usamos el mapper inyectado
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(snippetMapper.toDetailResponse(created));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Actualizar snippet", description = "Actualiza los datos de un snippet existente")
+    public ResponseEntity<SnippetDTO.SnippetDetailResponse> updateSnippet(
+            @PathVariable UUID id,
+            @Valid @RequestBody SnippetDTO.SnippetUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 1. Obtenemos el ID del usuario logueado
+        String loginIdentifier = userDetails.getUsername();
+        
+        User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+                .orElseThrow(() -> new ForbiddenAccessException("User not found"));
+
+        // 2. Actualizamos el snippet (el servicio se encargará de verificar permisos)
+        Snippet updated = snippetService.updateSnippet(id, request, currentUser.getId());
+        
+        // 3. Usamos el mapper inyectado
+        return ResponseEntity.ok(snippetMapper.toDetailResponse(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar snippet", description = "Elimina lógicamente un snippet (soft delete)")
+    public ResponseEntity<Void> deleteSnippet(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        // 1. Obtenemos el ID del usuario logueado
+        String loginIdentifier = userDetails.getUsername();
+        
+        User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+                .orElseThrow(() -> new ForbiddenAccessException("User not found"));
+
+        // 2. Eliminamos el snippet (el servicio verificará permisos)
+        snippetService.deleteSnippet(id, currentUser.getId());
+        
+        // 3. Devolvemos 204 No Content (estándar para DELETE exitoso)
+        return ResponseEntity.noContent().build();
     }
 }
