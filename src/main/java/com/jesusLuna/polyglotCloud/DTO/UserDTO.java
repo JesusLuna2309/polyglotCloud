@@ -40,7 +40,15 @@ public class UserDTO {
 
         public record UserPublicResponse(
                 UUID id,
-                String lastName,
+                String username,
+                Instant createdAt
+        ) {}
+
+        public record UserProfileResponse(
+                UUID id,
+                String username,
+                String email,
+                Role role,
                 Instant createdAt
         ) {}
 
@@ -56,13 +64,7 @@ public class UserDTO {
                 
                 @NotBlank(message = "Password is required")
                 @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
-                String password,
-                
-                @Size(max = 100, message = "First name cannot exceed 100 characters")
-                String firstName,
-                
-                @Size(max = 100, message = "Last name cannot exceed 100 characters")
-                String lastName
+                String password
         ) {}
 
                 public record AuthResponseWithCookies(
