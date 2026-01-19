@@ -28,7 +28,9 @@ public class AuthService {
     private final PostQuantumPasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenProvider jwtTokenProvider;
-    //TODO: A los que sea de solo lectura poner en el trasactional @readOnly = true
+    private final EmailService emailService;
+
+    //TODO: Agregar readonly en @Transactional(readOnly = true) a los métodos que no modifiquen datos (en el service)
 
 
     @Transactional
@@ -52,18 +54,23 @@ public class AuthService {
                 .emailVerified(false)
                 .build();
         
-        // Hash password
+        // Hash password con post-quantum security
         user.changePassword(passwordEncoder.encode(request.password()));
-
+        
+        // Generate post-quantum email verification token
         String verificationToken = user.generateEmailVerificationToken(passwordEncoder);
         
         // Save user
         user = userRepository.save(user);
         
-        log.info("User registered with post-quantum security: {} - Token: {}",
-                user.getUsername(), verificationToken);
-        log.warn("Email sending not implemented - verification link: /auth/verify-email?token={}",
-                verificationToken);
+        // 🎉 ENVIAR EMAIL DE VERIFICACIÓN
+        try {
+            emailService.sendEmailVerification(user.getEmail(), user.getUsername(), verificationToken);
+            log.info("User registered and verification email sent: {}", user.getUsername());
+        } catch (Exception e) {
+            log.error("User registered but failed to send verification email: {}", user.getUsername(), e);
+            // No fallar el registro por un email - el usuario puede reenviar
+        }
         
         return toUserResponse(user);
     }
