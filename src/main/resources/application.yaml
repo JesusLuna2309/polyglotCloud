@@ -3,20 +3,18 @@ spring:
     name: polyglotCloud
 
   mail:
-    host: smtp.gmail.com  # O tu proveedor SMTP
-    port: 587
-    username: tu-email@gmail.com  # Tu email
-    password: tu-app-password     # App password de Gmail
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: e16cfa543dd8c5  # Lo obtienes de mailtrap.io
+    password: 3fe7c49bb154a2  # Lo obtienes de mailtrap.io
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
+          ssl:
+            trust: sandbox.smtp.mailtrap.io
 
 
 app:
