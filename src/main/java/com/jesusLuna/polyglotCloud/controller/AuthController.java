@@ -37,8 +37,6 @@ public class AuthController {
 
 
     private final AuthService authService;
-    // Nombre de la cookie para el refresh token
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 
 // --- INYECCIÓN DE PROPIEDADES (DINÁMICO) ---
     
@@ -106,7 +104,7 @@ public class AuthController {
     @PostMapping("/refresh")
     @Operation(summary = "Refresh Token", description = "Uses the HttpOnly Cookie to get a new Access Token")
     public ResponseEntity<UserDTO.UserLoginResponse> refreshToken(
-            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME) String refreshToken, // Lee la cookie automáticamente
+            @CookieValue(name = "${app.jwt.cookie.name}") String refreshToken, // Lee la cookie automáticamente
             HttpServletRequest httpRequest
     ) {
         String ipAddress = HttpRequestUtils.getClientIpAddress(httpRequest);
@@ -128,7 +126,7 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "Logout user", description = "Logs out user by revoking refresh token and clearing cookie")
     public ResponseEntity<Void> logout(
-            @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken
+            @CookieValue(name = "${app.jwt.cookie.name}", required = false) String refreshToken
     ) {
         log.info("Logout request received");
         
