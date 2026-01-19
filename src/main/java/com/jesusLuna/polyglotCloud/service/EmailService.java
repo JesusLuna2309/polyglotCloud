@@ -1,5 +1,7 @@
 package com.jesusLuna.polyglotCloud.service;
 
+import java.io.UnsupportedEncodingException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -52,13 +54,13 @@ public class EmailService {
             helper.setFrom(fromEmail, "PolyglotCloud");
             helper.setTo(toEmail);
             helper.setSubject("Verifica tu cuenta en PolyglotCloud");
-            helper.setText(htmlContent, true); // true = HTML content
+            helper.setText(htmlContent, true);
             
             mailSender.send(message);
             
             log.info("Email verification sent successfully to: {}", toEmail);
             
-        } catch (MessagingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {  // ✅ AGREGAR UnsupportedEncodingException
             log.error("Failed to send email verification to: {}", toEmail, e);
             throw new RuntimeException("Failed to send verification email", e);
         }
@@ -89,7 +91,7 @@ public class EmailService {
             
             log.info("Welcome email sent successfully to: {}", toEmail);
             
-        } catch (MessagingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {  // ✅ AGREGAR UnsupportedEncodingException
             log.error("Failed to send welcome email to: {}", toEmail, e);
             // No throw exception aquí - welcome email no es crítico
         }
