@@ -5,7 +5,7 @@
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.1-green.svg)](https://spring.io/projects/spring-boot)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Propietaria-red.svg)](LICENSE)
 
 ## 📖 Descripción
 
@@ -340,7 +340,12 @@ stateDiagram-v2
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto está bajo una **Licencia Propietaria** basada en MIT.
+
+- ✅ **Uso personal y educativo**: Completamente libre
+- ❌ **Uso comercial**: Requiere licencia comercial (contacta al autor)
+
+Para uso comercial, contacta a [@JesusLuna2309](https://github.com/JesusLuna2309). Ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ## 👨‍💻 Autor
 
