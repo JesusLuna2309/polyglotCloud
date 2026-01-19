@@ -1,47 +1,47 @@
 # 🚀 PolyglotCloud
 
-**Una plataforma moderna para gestionar y compartir snippets de código con seguridad post-cuántica.**
+**A modern platform for managing and sharing code snippets with post-quantum security.**
 
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.1-green.svg)](https://spring.io/projects/spring-boot)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-Propietaria-red.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
-## 📖 Descripción
+## 📖 Description
 
-PolyglotCloud es una API REST moderna desarrollada con **Spring Boot 4** que permite a los desarrolladores:
+PolyglotCloud is a modern REST API developed with **Spring Boot 4** that allows developers to:
 
-- 🔐 **Autenticación segura** con JWT y refresh tokens
-- 📝 **Gestión de snippets** de código en múltiples lenguajes
-- 🔄 **Traducción de snippets** entre diferentes lenguajes de programación
-- 🛡️ **Seguridad post-cuántica** con Argon2id + SHAKE-256
-- 📧 **Verificación de email** automatizada
-- 👥 **Sistema de roles** (USER, ADMIN)
+- 🔐 **Secure authentication** with JWT and refresh tokens
+- 📝 **Code snippet management** in multiple programming languages
+- 🔄 **Snippet translation** between different programming languages
+- 🛡️ **Post-quantum security** with Argon2id + SHAKE-256
+- 📧 **Automated email verification**
+- 👥 **Role-based system** (USER, ADMIN)
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
 ```mermaid
 graph TB
-    Client[Cliente Web/Mobile] --> Controller[Controllers]
+    Client[Web/Mobile Client] --> Controller[Controllers]
     Controller --> Service[Services]
     Service --> Repository[Repositories] 
     Repository --> DB[(PostgreSQL)]
     Service --> Email[📧 EmailService]
     Service --> Security[🔐 Security]
     
-    subgraph Security[🔐 Capa de Seguridad]
+    subgraph Security[🔐 Security Layer]
         JWT[JWT Provider]
         PQE[PostQuantumPasswordEncoder]
         RefreshToken[Refresh Token Service]
     end
     
-    subgraph Controllers[🎮 Controladores]
+    subgraph Controllers[🎮 Controllers]
         AuthC[AuthController]
         UserC[UserController] 
         SnippetC[SnippetController]
     end
     
-    subgraph Services[⚙️ Servicios]
+    subgraph Services[⚙️ Services]
         AuthS[AuthService]
         UserS[UserService]
         SnippetS[SnippetService]
@@ -49,7 +49,7 @@ graph TB
     end
 ```
 
-## 🔐 Flujo de Autenticación
+## 🔐 Authentication Flow
 
 ```mermaid
 sequenceDiagram
@@ -60,77 +60,77 @@ sequenceDiagram
     participant EmailService
     participant Mailtrap
 
-    Note over Client,Mailtrap: 1. Registro de Usuario
+    Note over Client,Mailtrap: 1. User Registration
     Client->>AuthController: POST /auth/register
     AuthController->>AuthService: register(request)
-    AuthService->>DB: Guardar usuario
+    AuthService->>DB: Save user
     AuthService->>EmailService: sendEmailVerification()
-    EmailService->>Mailtrap: Enviar email
+    EmailService->>Mailtrap: Send email
     AuthService-->>Client: UserResponse
 
-    Note over Client,Mailtrap: 2. Verificación de Email
+    Note over Client,Mailtrap: 2. Email Verification
     Client->>AuthController: GET /auth/verify-email?token=xxx
     AuthController->>AuthService: verifyEmail(token)
-    AuthService->>DB: Marcar email como verificado
+    AuthService->>DB: Mark email as verified
     AuthService-->>Client: UserResponse
 
     Note over Client,DB: 3. Login
     Client->>AuthController: POST /auth/login
     AuthController->>AuthService: login(request)
-    AuthService->>DB: Validar credenciales
+    AuthService->>DB: Validate credentials
     AuthService-->>Client: JWT + HttpOnly Cookie (Refresh Token)
 
     Note over Client,DB: 4. Refresh Token
-    Client->>AuthController: POST /auth/refresh (con cookie)
+    Client->>AuthController: POST /auth/refresh (with cookie)
     AuthController->>AuthService: refreshTokens()
-    AuthService->>DB: Rotar refresh token
-    AuthService-->>Client: Nuevo JWT + Nueva Cookie
+    AuthService->>DB: Rotate refresh token
+    AuthService-->>Client: New JWT + New Cookie
 ```
 
-## 🗂️ Gestión de Snippets
+## 🗂️ Snippet Management
 
 ```mermaid
 graph LR
-    Create[Crear Snippet] --> Draft[Estado: DRAFT]
-    Draft --> Publish[Publicar]
-    Publish --> Published[Estado: PUBLISHED]
-    Published --> Translate[Traducir]
-    Translate --> Translation[Snippet Traducido]
+    Create[Create Snippet] --> Draft[Status: DRAFT]
+    Draft --> Publish[Publish]
+    Publish --> Published[Status: PUBLISHED]
+    Published --> Translate[Translate]
+    Translate --> Translation[Translated Snippet]
     
-    Draft --> Archive[Archivar]
+    Draft --> Archive[Archive]
     Published --> Archive
-    Archive --> Archived[Estado: ARCHIVED]
+    Archive --> Archived[Status: ARCHIVED]
     
-    Draft --> Delete[Eliminar]
+    Draft --> Delete[Delete]
     Published --> Delete
     Archived --> Delete
-    Delete --> Deleted[Estado: DELETED]
+    Delete --> Deleted[Status: DELETED]
 ```
 
-## 🚀 Tecnologías
+## 🚀 Technologies
 
 ### Backend
-- **Java 21** - Lenguaje de programación
-- **Spring Boot 4.0.1** - Framework principal
-- **Spring Security** - Autenticación y autorización
-- **PostgreSQL** - Base de datos principal
-- **Flyway** - Migraciones de BD
-- **MapStruct** - Mapeo objeto-objeto
-- **Lombok** - Reducción de boilerplate
+- **Java 21** - Programming language
+- **Spring Boot 4.0.1** - Main framework
+- **Spring Security** - Authentication and authorization
+- **PostgreSQL** - Primary database
+- **Flyway** - Database migrations
+- **MapStruct** - Object-to-object mapping
+- **Lombok** - Boilerplate reduction
 
-### Seguridad Post-Cuántica
-- **Argon2id** - Hashing de passwords resistente a GPU
-- **SHAKE-256** - Función hash post-cuántica
-- **BouncyCastle** - Implementación criptográfica
-- **JWT** - Tokens de acceso
-- **HttpOnly Cookies** - Almacenamiento seguro de refresh tokens
+### Post-Quantum Security
+- **Argon2id** - GPU-resistant password hashing
+- **SHAKE-256** - Post-quantum hash function
+- **BouncyCastle** - Cryptographic implementation
+- **JWT** - Access tokens
+- **HttpOnly Cookies** - Secure refresh token storage
 
-### Comunicaciones
-- **Spring Boot Mail** - Envío de emails
-- **Thymeleaf** - Templates HTML para emails
-- **Mailtrap** - Servicio de email para desarrollo
+### Communications
+- **Spring Boot Mail** - Email sending
+- **Thymeleaf** - HTML email templates
+- **Mailtrap** - Email service for development
 
-## 📊 Modelo de Datos
+## 📊 Data Model
 
 ```mermaid
 erDiagram
@@ -187,25 +187,25 @@ erDiagram
     SNIPPETS ||--o{ SNIPPETS : "translation of"
 ```
 
-## 🛠️ Instalación y Configuración
+## 🛠️ Installation and Configuration
 
-### Prerrequisitos
+### Prerequisites
 - Java 21
 - PostgreSQL 16+
 - Maven 3.8+
 
-### 1. Clonar el repositorio
+### 1. Clone the repository
 ```bash
 git clone https://github.com/JesusLuna2309/polyglotCloud.git
 cd polyglotCloud
 ```
 
-### 2. Configurar base de datos
+### 2. Configure database
 ```sql
 CREATE DATABASE polyglotcloud_db;
 ```
 
-### 3. Configurar variables de entorno
+### 3. Configure environment variables
 ```yaml
 # src/main/resources/application.yaml
 spring:
@@ -229,78 +229,78 @@ app:
     support-email: support@polyglotcloud.com
 ```
 
-### 4. Ejecutar migraciones
+### 4. Run migrations
 ```bash
 mvn flyway:migrate
 ```
 
-### 5. Ejecutar la aplicación
+### 5. Run the application
 ```bash
 mvn spring-boot:run
 ```
 
 ## 📡 API Endpoints
 
-### 🔐 Autenticación
-| Método | Endpoint | Descripción |
+### 🔐 Authentication
+| Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/auth/register` | Registrar nuevo usuario |
-| `POST` | `/auth/login` | Iniciar sesión |
-| `GET`  | `/auth/verify-email` | Verificar email |
-| `POST` | `/auth/refresh` | Renovar access token |
-| `POST` | `/auth/logout` | Cerrar sesión |
+| `POST` | `/auth/register` | Register new user |
+| `POST` | `/auth/login` | User login |
+| `GET`  | `/auth/verify-email` | Verify email |
+| `POST` | `/auth/refresh` | Refresh access token |
+| `POST` | `/auth/logout` | User logout |
 
-### 👥 Usuarios
-| Método | Endpoint | Descripción |
+### 👥 Users
+| Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/users` | Listar usuarios (Admin) |
-| `GET` | `/users/{id}` | Obtener perfil de usuario |
-| `PUT` | `/users/{id}` | Actualizar perfil |
-| `PUT` | `/users/{id}/password` | Cambiar contraseña |
+| `GET` | `/users` | List users (Admin only) |
+| `GET` | `/users/{id}` | Get user profile |
+| `PUT` | `/users/{id}` | Update profile |
+| `PUT` | `/users/{id}/password` | Change password |
 
 ### 📝 Snippets
-| Método | Endpoint | Descripción |
+| Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/snippets` | Crear snippet |
-| `GET` | `/snippets` | Listar snippets |
-| `GET` | `/snippets/{id}` | Obtener snippet |
-| `PUT` | `/snippets/{id}` | Actualizar snippet |
-| `DELETE` | `/snippets/{id}` | Eliminar snippet |
-| `POST` | `/snippets/{id}/translate` | Traducir snippet |
+| `POST` | `/snippets` | Create snippet |
+| `GET` | `/snippets` | List snippets |
+| `GET` | `/snippets/{id}` | Get snippet |
+| `PUT` | `/snippets/{id}` | Update snippet |
+| `DELETE` | `/snippets/{id}` | Delete snippet |
+| `POST` | `/snippets/{id}/translate` | Translate snippet |
 
 ## 🧪 Testing
 
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 mvn test
 
-# Ejecutar tests específicos
+# Run specific tests
 mvn test -Dtest=AuthServiceTest
 
-# Ejecutar tests con cobertura
+# Run tests with coverage
 mvn jacoco:prepare-agent test jacoco:report
 ```
 
-## 📈 Características de Seguridad
+## 📈 Security Features
 
-### 🛡️ Criptografía Post-Cuántica
-- **Argon2id**: Memoria intensiva, resistente a ataques de fuerza bruta
-- **SHAKE-256**: Función hash extensible resistente a ataques cuánticos
-- **Timing Attack Protection**: Comparaciones en tiempo constante
+### 🛡️ Post-Quantum Cryptography
+- **Argon2id**: Memory-intensive, brute-force attack resistant
+- **SHAKE-256**: Extensible hash function resistant to quantum attacks
+- **Timing Attack Protection**: Constant-time comparisons
 
-### 🍪 Gestión de Sesiones
-- **JWT Access Tokens**: Vida corta (15-30 min)
-- **HttpOnly Refresh Tokens**: Almacenados en cookies seguras
-- **Token Rotation**: Rotación automática de refresh tokens
-- **Device Tracking**: IP y User-Agent para auditoría
+### 🍪 Session Management
+- **JWT Access Tokens**: Short-lived (15-30 min)
+- **HttpOnly Refresh Tokens**: Stored in secure cookies
+- **Token Rotation**: Automatic refresh token rotation
+- **Device Tracking**: IP and User-Agent for auditing
 
-### 🚨 Protección contra Ataques
-- **Rate Limiting**: Limitación de intentos de login
-- **Account Locking**: Bloqueo temporal por intentos fallidos
-- **CORS Configuration**: Configuración de origen cruzado
-- **XSS Protection**: Cookies HttpOnly, SameSite
+### 🚨 Attack Protection
+- **Rate Limiting**: Login attempt limitations
+- **Account Locking**: Temporary lockout for failed attempts
+- **CORS Configuration**: Cross-origin configuration
+- **XSS Protection**: HttpOnly cookies, SameSite
 
-## 🔄 Estados de Snippets
+## 🔄 Snippet States
 
 ```mermaid
 stateDiagram-v2
@@ -318,46 +318,46 @@ stateDiagram-v2
     DELETED --> [*]
     
     note right of DRAFT
-        Visible solo para el autor
+        Visible only to author
     end note
     
     note right of PUBLISHED
-        Visible públicamente
+        Publicly visible
     end note
     
     note right of ARCHIVED
-        Oculto pero recuperable
+        Hidden but recoverable
     end note
 ```
 
-## 🤝 Contribución
+## 🤝 Contributing
 
-1. Fork del proyecto
-2. Crear rama feature (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto está bajo una **Licencia Propietaria** basada en MIT.
+This project is under a **Proprietary License** based on MIT.
 
-- ✅ **Uso personal y educativo**: Completamente libre
-- ❌ **Uso comercial**: Requiere licencia comercial (contacta al autor)
+- ✅ **Personal and educational use**: Completely free
+- ❌ **Commercial use**: Requires commercial license (contact author)
 
-Para uso comercial, contacta a [@JesusLuna2309](https://github.com/JesusLuna2309). Ver el archivo [LICENSE](LICENSE) para más detalles.
+For commercial use, contact [@JesusLuna2309](https://github.com/JesusLuna2309). See the [LICENSE](LICENSE) file for more details.
 
-## 👨‍💻 Autor
+## 👨‍💻 Author
 
 **Jesús Luna** - [@JesusLuna2309](https://github.com/JesusLuna2309)
 
-## 🙏 Agradecimientos
+## 🙏 Acknowledgments
 
-- Spring Boot Team por el excelente framework
-- BouncyCastle por las implementaciones post-cuánticas
-- Mailtrap por el servicio de email para desarrollo
-- MapStruct por el mapeo automático de objetos
+- Spring Boot Team for the excellent framework
+- BouncyCastle for post-quantum implementations
+- Mailtrap for development email service
+- MapStruct for automatic object mapping
 
 ---
 
-⭐ Si este proyecto te fue útil, ¡no olvides darle una estrella!
+⭐ If this project was useful to you, don't forget to give it a star!
