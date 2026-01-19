@@ -17,3 +17,10 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+
+
+app:
+  email:
+    from: noreply@polyglotcloud.com
+    verification-url: http://localhost:8080/auth/verify-email
+    support-email: support@polyglotcloud.com

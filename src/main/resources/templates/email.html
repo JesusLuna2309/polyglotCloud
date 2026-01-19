@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifica tu cuenta</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .btn { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 PolyglotCloud</h1>
+            <h2>Verifica tu cuenta</h2>
+        </div>
+        <div class="content">
+            <p>¡Hola <strong th:text="${username}">Usuario</strong>!</p>
+            
+            <p>¡Gracias por registrarte en PolyglotCloud! Para completar tu registro y comenzar a crear snippets de código increíbles, necesitas verificar tu dirección de email.</p>
+            
+            <p style="text-align: center;">
+                <a th:href="${verificationUrl}" class="btn">✅ Verificar mi cuenta</a>
+            </p>
+            
+            <p><strong>⏰ Este enlace expira en 24 horas.</strong></p>
+            
+            <p>Si no creaste una cuenta con nosotros, puedes ignorar este email.</p>
+            
+            <hr>
+            <p>¿Problemas con el botón? Copia y pega este enlace en tu navegador:</p>
+            <p style="word-break: break-all; color: #666; font-size: 12px;" th:text="${verificationUrl}"></p>
+        </div>
+        <div class="footer">
+            <p>¿Necesitas ayuda? Contáctanos en <span th:text="${supportEmail}">support@polyglotcloud.com</span></p>
+            <p>© 2026 PolyglotCloud - Tu plataforma de snippets de código</p>
+        </div>
+    </div>
+</body>
+</html>
