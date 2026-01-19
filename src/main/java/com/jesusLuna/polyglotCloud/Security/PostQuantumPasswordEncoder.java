@@ -28,6 +28,50 @@ public class PostQuantumPasswordEncoder {
     public PostQuantumPasswordEncoder() {
         this.secureRandom = new SecureRandom();
     }
+
+    /**
+     * Genera token criptográficamente seguro usando SHAKE-256
+     * Mantiene consistencia con la arquitectura post-cuántica
+     */
+    public String generateSecureToken(String context) {
+        // Generar entropía base
+        byte[] randomBytes = new byte[32]; // 256 bits
+        secureRandom.nextBytes(randomBytes);
+        
+        // Timestamp para unicidad
+        long timestamp = System.nanoTime();
+        byte[] timestampBytes = String.valueOf(timestamp).getBytes(StandardCharsets.UTF_8);
+        
+        // Context para diferenciación (ej: "email_verification", "password_reset")
+        byte[] contextBytes = context.getBytes(StandardCharsets.UTF_8);
+        
+        // Usar SHAKE-256 para generar token resistente cuánticamente
+        SHAKEDigest shake = new SHAKEDigest(256);
+        shake.update(randomBytes, 0, randomBytes.length);
+        shake.update(timestampBytes, 0, timestampBytes.length);
+        shake.update(contextBytes, 0, contextBytes.length);
+        
+        // Output: 256 bits (32 bytes) suficiente para tokens
+        byte[] tokenBytes = new byte[32];
+        shake.doFinal(tokenBytes, 0, 32);
+        
+        // Base64 URL-safe (sin padding, ideal para URLs)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+    }
+
+    /**
+     * Genera token de verificación de email post-cuántico
+     */
+    public String generateEmailVerificationToken() {
+        return generateSecureToken("email_verification");
+    }
+
+    /**
+     * Genera token de reset de password post-cuántico  
+     */
+    public String generatePasswordResetToken() {
+        return generateSecureToken("password_reset");
+    }
     
     /**
      * Hashea una contraseña usando Argon2id + SHAKE-256

@@ -1,13 +1,16 @@
 package com.jesusLuna.polyglotCloud.models;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HexFormat;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import com.jesusLuna.polyglotCloud.models.enums.Role;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -171,6 +174,15 @@ public class User {
         this.lastPasswordChange = Instant.now();
         this.passwordResetToken = null;
         this.passwordResetExpires = null;
+    }
+
+    /**
+     * Genera token de verificación usando criptografía post-cuántica
+     */
+    public String generateEmailVerificationToken(PostQuantumPasswordEncoder encoder) {
+        this.emailVerificationToken = encoder.generateEmailVerificationToken();
+        this.emailVerificationExpires = Instant.now().plus(24, ChronoUnit.HOURS);
+        return this.emailVerificationToken;
     }
 
     

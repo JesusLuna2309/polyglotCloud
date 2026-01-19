@@ -54,20 +54,16 @@ public class AuthService {
         
         // Hash password
         user.changePassword(passwordEncoder.encode(request.password()));
-        
-        // TODO: Generate email verification token
-        /*
-        String verificationToken = user.generateEmailVerificationToken();
-        log.debug("Generated email verification token for user: {}", request.username());
-        */
-        
-        // TODO: Send verification email (not implemented in MVP)
-        log.warn("Email verification not implemented - please check database for token");
+
+        String verificationToken = user.generateEmailVerificationToken(passwordEncoder);
         
         // Save user
         user = userRepository.save(user);
         
-        log.info("User registered successfully: {}", user.getUsername());
+        log.info("User registered with post-quantum security: {} - Token: {}",
+                user.getUsername(), verificationToken);
+        log.warn("Email sending not implemented - verification link: /auth/verify-email?token={}",
+                verificationToken);
         
         return toUserResponse(user);
     }
