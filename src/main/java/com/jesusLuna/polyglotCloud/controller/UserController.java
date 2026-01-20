@@ -109,7 +109,7 @@ public class UserController {
 
         // 3. Buscamos al usuario que hace la petición (el logueado)
         String loginIdentifier = userDetails.getUsername();
-        User requester = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User requester = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
 
         // 4.  Lógica de permisos según rol y ownership
@@ -140,7 +140,7 @@ public class UserController {
 
         // 2. Buscamos al usuario que hace la petición (requester)
         String loginIdentifier = userDetails.getUsername();
-        User requester = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User requester = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
 
         // 3. Verificamos permisos:  Solo puede actualizar si es Admin O es su propio perfil
@@ -177,7 +177,7 @@ public class UserController {
 
         // 2. Buscamos al admin que hace la petición
         String loginIdentifier = userDetails.getUsername();
-        User requester = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User requester = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
 
         // 3. Actualizamos el estado del usuario (auditoría:  quién hizo el cambio)
@@ -201,7 +201,7 @@ public class UserController {
 
         // 2. Buscamos al admin que hace la petición
         String loginIdentifier = userDetails.getUsername();
-        User requester = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User requester = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
 
         // 3. Actualizamos el rol del usuario (auditoría:  quién hizo el cambio)
@@ -225,7 +225,7 @@ public class UserController {
 
         // 2. Buscamos al usuario que hace la petición
         String loginIdentifier = userDetails.getUsername();
-        User requester = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User requester = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
 
         // 3. Validación de permisos:  Solo puede cambiar su propia contraseña (o ser Admin)
@@ -252,7 +252,7 @@ public class UserController {
 
         // 2. Buscamos al usuario que hace la petición (el admin)
         String loginIdentifier = userDetails.getUsername();
-        User requester = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User requester = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
 
         // 3. Ejecutamos el soft delete pasando el ID del admin (para auditoría)

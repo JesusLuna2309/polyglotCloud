@@ -38,11 +38,11 @@ public class AuthService {
         log.info("Registering new user: {}", request.username());
         
         // Validate uniqueness
-        if (userRepository.existsByUsername(request.username())) {
+        if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
             throw new BusinessRuleException("Username already exists: " + request.username());
         }
         
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
             throw new BusinessRuleException("Email already exists: " + request.email());
         }
         
@@ -83,7 +83,7 @@ public class AuthService {
         log.info("Login attempt for: {}", login);
         
         // Find user by username or email
-        User user = userRepository.findByUsernameOrEmail(login, login)
+        User user = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(userAgent, login)
                 .orElseThrow(() -> new BusinessRuleException("Invalid credentials"));
         
         // Verificar si la cuenta está activa

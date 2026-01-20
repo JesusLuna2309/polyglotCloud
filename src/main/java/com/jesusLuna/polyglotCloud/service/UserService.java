@@ -7,7 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 import com.jesusLuna.polyglotCloud.dto.UserDTO;
 import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
@@ -15,6 +14,7 @@ import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRespository;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +33,10 @@ public class UserService {
         log.debug("Creating user with username: {} by admin: {}", request.username(), creatorId);
 
         // Validate uniqueness
-        if (userRepository.existsByUsername(request.username())) {
+        if (userRepository.existsByUsernameAndDeletedAtIsNull(request.username())) {
             throw new BusinessRuleException("Username already exists: " + request.username());
         }
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
             throw new BusinessRuleException("Email already exists: " + request.email());
         }
 
@@ -57,20 +57,20 @@ public class UserService {
     }
 
     public User getUserById(UUID id) {
-        log.debug("Fetching user with id: {}", id);
-        return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+    log.debug("Fetching active user with id: {}", id);
+    return userRepository.findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
     public User getUserByUsername(String username) {
-        log.debug("Fetching user with username: {}", username);
-        return userRepository.findByUsername(username)
+        log.debug("Fetching active user with username: {}", username);
+        return userRepository.findByUsernameAndDeletedAtIsNull(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
     }
 
     public Page<User> listAllUsers(Pageable pageable) {
-        log.debug("Listing all users with pageable: {}", pageable);
-        return userRepository.findAll(pageable);
+        log.debug("Listing all active users with pageable: {}", pageable);
+        return userRepository.findByDeletedAtIsNull(pageable);
     }
 
     public Page<User> searchUsers(UserDTO.UserSearchFilters filters, Pageable pageable) {
@@ -85,12 +85,12 @@ public class UserService {
 
     public Page<User> listUsersByRole(Role role, Pageable pageable) {
         log.debug("Listing users by role: {} with pageable: {}", role, pageable);
-        return userRepository.findByRole(role, pageable);
+        return userRepository.findByRoleAndDeletedAtIsNull(role, pageable);
     }
 
     public Page<User> listActiveUsers(Pageable pageable) {
         log.debug("Listing active users with pageable: {}", pageable);
-        return userRepository.findByActiveTrue(pageable);
+        return userRepository.findByActiveTrueAndDeletedAtIsNull(pageable);
     }
 
     @Transactional
@@ -112,7 +112,7 @@ public class UserService {
 
         if (request.email() != null && !request.email().equals(user.getEmail())) {
             // Validate email uniqueness
-            if (userRepository.existsByEmail(request.email())) {
+            if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
                 throw new BusinessRuleException("Email already exists: " + request.email());
             }
             user.setEmail(request.email());
@@ -201,19 +201,68 @@ public class UserService {
     public void deleteUser(UUID userId, UUID adminId) {
         log.debug("Soft deleting user {} by admin {}", userId, adminId);
 
+        User admin = getUserById(adminId);
+        if (!admin.canAdministrate()) {
+            throw new ForbiddenAccessException("Only administrators can delete users");
+        }
+
+        // Evitar que el admin se elimine a sí mismo
         if (userId.equals(adminId)) {
             throw new BusinessRuleException("Administrators cannot delete their own account");
         }
 
-        updateUserStatus(userId, false, adminId);
-        log.info("User {} soft deleted by admin {}", userId, adminId);
+        User user = getUserById(userId);
+        
+        // Verificar si ya está eliminado
+        if (user.isDeleted()) {
+            throw new BusinessRuleException("User is already deleted");
+        }
+        
+        // Verificar si es el último admin
+        if (user.getRole() == Role.ADMIN) {
+            long adminCount = userRepository.countByRoleAndDeletedAtIsNull(Role.ADMIN);
+            if (adminCount <= 1) {
+                throw new BusinessRuleException("Cannot delete the last administrator");
+            }
+        }
+
+        // ✅ USAR EL MÉTODO SOFT DELETE DEL MODELO
+        user.softDelete();
+        
+        userRepository.save(user);
+        log.info("User {} soft deleted successfully by admin {}", userId, adminId);
+    }
+
+    @Transactional
+    public User restoreUser(UUID userId, UUID adminId) {
+        log.debug("Restoring deleted user {} by admin {}", userId, adminId);
+
+        User admin = getUserById(adminId);
+        if (!admin.canAdministrate()) {
+            throw new ForbiddenAccessException("Only administrators can restore users");
+        }
+
+        // Buscar incluyendo eliminados
+        User user = userRepository.findByIdIncludingDeleted(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        if (!user.isDeleted()) {
+            throw new BusinessRuleException("User is not deleted");
+        }
+
+        // ✅ USAR EL MÉTODO RESTORE DEL MODELO
+        user.restore();
+        
+        User restored = userRepository.save(user);
+        log.info("User {} restored successfully by admin {}", userId, adminId);
+        return restored;
     }
 
     public boolean isUsernameAvailable(String username) {
-        return !userRepository.existsByUsername(username);
+        return !userRepository.existsByUsernameAndDeletedAtIsNull(username);
     }
 
     public boolean isEmailAvailable(String email) {
-        return !userRepository.existsByEmail(email);
+        return !userRepository.existsByEmailAndDeletedAtIsNull(email);
     }
 }

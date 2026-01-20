@@ -17,13 +17,14 @@ import com.jesusLuna.polyglotCloud.models.enums.Role;
 @Repository
 public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User>{
 
-    Optional<User> findByUsername(String username);
+    Optional<User> findByIdAndDeletedAtIsNull(UUID id);
 
-    Optional<User> findByEmail(String email);
+    Optional<User> findByUsernameAndDeletedAtIsNull(String username);
 
-    Optional<User> findByUsernameOrEmail(String username, String email);
+    Optional<User> findByEmailAndDeletedAtIsNull(String email);
+    Optional<User> findByUsernameOrEmailAndDeletedAtIsNull(String username, String email);
 
-    Optional<User> findByUsernameOrEmailAndPasswordHash(String username, String email, String passwordHash);
+    Optional<User> findByUsernameOrEmailAndPasswordHashAndDeletedAtIsNull(String username, String email, String passwordHash);
 
     Optional<User> findByEmailVerificationToken(String token); // VERIFY EMAIL
 
@@ -31,15 +32,22 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
 
 
     // Validaciones
-    boolean existsByUsername(String username);
 
-    boolean existsByEmail(String email);
+    Page<User> findByActiveTrueAndDeletedAtIsNull(Pageable pageable);
 
-    Page<User> findByActiveTrue(Pageable pageable);
+    Page<User> findByRoleAndDeletedAtIsNull(Role role, Pageable pageable);
 
-    Page<User> findByRole(Role role, Pageable pageable);
+    Page<User> findByEmailVerifiedFalseAndDeletedAtIsNull(Pageable pageable);
 
-    Page<User> findByEmailVerifiedFalse(Pageable pageable);
+    Page<User> findByDeletedAtIsNull(Pageable pageable);
+
+
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdIncludingDeleted(@Param("id") UUID id);
+
+    boolean existsByUsernameAndDeletedAtIsNull(String username);
+    boolean existsByEmailAndDeletedAtIsNull(String email);
+    
 
 
     @Query("SELECT u FROM User u " +
@@ -58,5 +66,8 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
         
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role")
     long countByRole(@Param("role") Role role);
+
+    long countByRoleAndDeletedAtIsNull(Role role);
+
 
 }

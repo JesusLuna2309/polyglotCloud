@@ -105,6 +105,9 @@ public class User {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Size(max = 45)
     @Column(name = "last_login_ip", length = 45, nullable = true)
     private String lastLoginIp;
@@ -183,6 +186,40 @@ public class User {
         this.emailVerificationToken = encoder.generateEmailVerificationToken();
         this.emailVerificationExpires = Instant.now().plus(24, ChronoUnit.HOURS);
         return this.emailVerificationToken;
+    }
+
+        /**
+     * Soft delete - marca como eliminado sin borrar de BD
+     */
+    public void softDelete() {
+        this.deletedAt = Instant.now();
+        this.active = false;
+        this.emailVerificationToken = null;
+        this.passwordResetToken = null;
+    }
+    
+    /**
+     * Restaurar usuario soft-deleted
+     */
+    public void restore() {
+        this.deletedAt = null;
+        this.active = true;
+    }
+    
+    /**
+     * Verifica si el usuario está soft-deleted
+     */
+    @Transient
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
+    
+    /**
+     * Verifica si el usuario está disponible (no eliminado)
+     */
+    @Transient
+    public boolean isAvailable() {
+        return this.deletedAt == null && this.active;
     }
 
     
