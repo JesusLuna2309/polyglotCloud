@@ -67,7 +67,7 @@ public class PostQuantumPasswordEncoder {
     }
 
     /**
-     * Genera token de reset de password post-cuántico  
+     * Genera token de reset de password post-cuántico 
      */
     public String generatePasswordResetToken() {
         return generateSecureToken("password_reset");

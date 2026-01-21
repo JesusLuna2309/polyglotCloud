@@ -2,11 +2,47 @@ spring:
   application:
     name: polyglotCloud
 
+  # ✅ CONFIGURACIÓN DE BASE DE DATOS (TE FALTA ESTO)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/polyglotcloud_db
+    username: postgres  # Tu usuario de PostgreSQL
+    password: admin123  # Tu contraseña de PostgreSQL
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # ✅ JPA/HIBERNATE (TE FALTA ESTO)
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Importante: usa Flyway para migraciones
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # ✅ FLYWAY MIGRATIONS (TE FALTA ESTO)
+  flyway:
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  # ✅ REDIS (TE FALTA ESTO - opcional)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+  # CONFIGURACIÓN DE EMAIL (ya la tienes)
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 2525
-    username: your_username  # Lo obtienes de mailtrap.io
-    password: your_password  # Lo obtienes de mailtrap.io
+    username: e16cfa543dd8c5
+    password: 3fe7c49bb154a2
     properties:
       mail:
         smtp:
@@ -16,9 +52,28 @@ spring:
           ssl:
             trust: sandbox.smtp.mailtrap.io
 
-
+# ✅ CONFIGURACIÓN JWT (TE FALTA ESTO)
 app:
+  jwt:
+    secret: mi-secreto-jwt-super-seguro-de-al-menos-256-bits-para-firmar-tokens-de-manera-segura-y-post-cuantica
+    expiration: 86400  # 24 horas en segundos
+    cookie:
+      name: refresh_token
+      expiration-s: 604800  # 7 días
+      secure: false  # true en producción
+      same-site: Lax
+
+  # CONFIGURACIÓN DE EMAIL (ya la tienes)
   email:
     from: noreply@polyglotcloud.com
-    verification-url: http://localhost:8080/auth/verify-email #Development URL
+    verification-url: http://localhost:8080/auth/verify-email
     support-email: support@polyglotcloud.com
+
+# ✅ LOGGING (OPCIONAL PERO ÚTIL)
+logging:
+  level:
+    com.jesusLuna.polyglotCloud: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.flywaydb: INFO
+    root: INFO
