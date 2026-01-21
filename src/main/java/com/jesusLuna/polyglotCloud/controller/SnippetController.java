@@ -152,7 +152,7 @@ public class SnippetController {
             // Pasamos el mismo valor a los dos campos
             String loginIdentifier = userDetails.getUsername();
             
-            User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+            User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                     .orElseThrow(() -> new ForbiddenAccessException("User credentials not found"));
 
             // 3. Comparamos IDs
@@ -173,7 +173,7 @@ public class SnippetController {
         // 1. Obtenemos el ID del usuario logueado
         String loginIdentifier = userDetails.getUsername();
         
-        User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ForbiddenAccessException("User not found"));
 
         // 2. Creamos el snippet
@@ -194,7 +194,7 @@ public class SnippetController {
         // 1. Obtenemos el ID del usuario logueado
         String loginIdentifier = userDetails.getUsername();
         
-        User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ForbiddenAccessException("User not found"));
 
         // 2. Actualizamos el snippet (el servicio se encargará de verificar permisos)
@@ -213,7 +213,7 @@ public class SnippetController {
         // 1. Obtenemos el ID del usuario logueado
         String loginIdentifier = userDetails.getUsername();
         
-        User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ForbiddenAccessException("User not found"));
 
         // 2. Eliminamos el snippet (el servicio verificará permisos)
@@ -235,7 +235,7 @@ public class SnippetController {
 
         // 1. Obtener usuario actual
         String loginIdentifier = userDetails.getUsername();
-        User currentUser = userRepository.findByUsernameOrEmail(loginIdentifier, loginIdentifier)
+        User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new ForbiddenAccessException("User not found"));
 
         // 2. Crear la traducción (el servicio manejará la lógica de vinculación)

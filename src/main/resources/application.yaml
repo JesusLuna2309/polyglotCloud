@@ -5,8 +5,8 @@ spring:
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 2525
-    username: e16cfa543dd8c5  # Lo obtienes de mailtrap.io
-    password: 3fe7c49bb154a2  # Lo obtienes de mailtrap.io
+    username: your_username  # Lo obtienes de mailtrap.io
+    password: your_password  # Lo obtienes de mailtrap.io
     properties:
       mail:
         smtp:
@@ -20,5 +20,5 @@ spring:
 app:
   email:
     from: noreply@polyglotcloud.com
-    verification-url: http://localhost:8080/auth/verify-email
+    verification-url: http://localhost:8080/auth/verify-email #Development URL
     support-email: support@polyglotcloud.com
