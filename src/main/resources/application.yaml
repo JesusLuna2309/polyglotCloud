@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/polyglotcloud_db
     username: postgres  # Tu usuario de PostgreSQL
-    password: admin123  # Tu contraseña de PostgreSQL
+    password: admin  # Tu contraseña de PostgreSQL
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20

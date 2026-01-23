@@ -18,7 +18,9 @@ CREATE TABLE users (
     last_login_ip VARCHAR(45),
     last_password_change TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+
 );
 
 -- Índices para optimización

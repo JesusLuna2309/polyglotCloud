@@ -33,7 +33,7 @@ public class RefreshToken {
     private UUID id;
 
     @NotBlank(message = "Token is required")
-    @Column(nullable = false, unique = true, length = 512)
+    @Column(nullable = false, unique = true, length = 255)
     private String token;
 
     @NotNull(message = "User ID is required")
@@ -44,7 +44,7 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
+    @Column(name = "is_revoked", nullable = false)
     @Builder.Default
     private boolean revoked = false;
 
@@ -55,7 +55,7 @@ public class RefreshToken {
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
-    @Column(name = "user_agent", length = 512)
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
     public boolean isValid() {

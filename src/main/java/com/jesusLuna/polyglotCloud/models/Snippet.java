@@ -42,8 +42,8 @@ public class Snippet {
     @Column(nullable = false, unique = true, length = 255)
     private String title;
 
-    @NotBlank(message = "Code is required")
-    @Column(nullable = false)
+    @Size(message = "Description cannot exceed 65535 characters")  // Sin límite max
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
@@ -72,6 +72,7 @@ public class Snippet {
     @JoinColumn(name = "language_id", nullable = false)
     private Language language;
 
+    @NotNull(message = "User is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
