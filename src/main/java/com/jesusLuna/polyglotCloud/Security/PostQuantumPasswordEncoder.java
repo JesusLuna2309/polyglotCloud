@@ -97,10 +97,11 @@ public class PostQuantumPasswordEncoder {
         generator.init(params);
         
         byte[] argon2Hash = new byte[HASH_LENGTH / 2]; // 32 bytes
-        generator.generateBytes(rawPassword.toCharArray(), argon2Hash);
+        byte[] passwordBytes = rawPassword.getBytes(StandardCharsets.UTF_8);
+        generator.generateBytes(passwordBytes, argon2Hash);
         
         // Aplicar SHAKE-256 para resistencia cuántica adicional
-        byte[] finalHash = applySHAKE256(argon2Hash, rawPassword.getBytes(StandardCharsets.UTF_8));
+        byte[] finalHash = applySHAKE256(argon2Hash, passwordBytes);
         
         // Combinar salt + hash para almacenamiento
         byte[] combined = new byte[salt.length + finalHash.length];
@@ -141,10 +142,11 @@ public class PostQuantumPasswordEncoder {
             generator.init(params);
             
             byte[] argon2Hash = new byte[HASH_LENGTH / 2];
-            generator.generateBytes(rawPassword.toCharArray(), argon2Hash);
+            byte[] passwordBytes = rawPassword.getBytes(StandardCharsets.UTF_8);
+            generator.generateBytes(passwordBytes, argon2Hash);
             
             // Aplicar SHAKE-256
-            byte[] calculatedHash = applySHAKE256(argon2Hash, rawPassword.getBytes(StandardCharsets.UTF_8));
+            byte[] calculatedHash = applySHAKE256(argon2Hash, passwordBytes);
             
             // Comparación time-constant para evitar timing attacks
             return constantTimeEquals(storedHash, calculatedHash);

@@ -1,7 +1,7 @@
 CREATE TABLE languages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL UNIQUE,           -- Cambiado de 50 a 100
-    code VARCHAR(20) NOT NULL UNIQUE,            
+    code VARCHAR(20) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

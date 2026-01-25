@@ -45,7 +45,7 @@ public class EmailService {
             context.setVariable("supportEmail", supportEmail);
             
             // Procesar template HTML
-            String htmlContent = templateEngine.process("email/email-verification", context);
+            String htmlContent = templateEngine.process("email", context);
             
             // Crear y enviar email
             MimeMessage message = mailSender.createMimeMessage();

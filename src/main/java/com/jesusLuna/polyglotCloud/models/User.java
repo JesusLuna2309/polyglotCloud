@@ -27,15 +27,19 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "users")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
         private static final int MAX_FAILED_ATTEMPTS_TEMP = 5;
@@ -167,12 +171,20 @@ public class User {
 
 
     public void changePassword(String newPasswordHash) {
-        if (newPasswordHash == null || newPasswordHash.length() != 60) {
-            throw new IllegalArgumentException("Invalid password hash");
+        // ✅ Validación más flexible y correcta
+        if (newPasswordHash == null || newPasswordHash.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password hash cannot be null or empty");
         }
+        
+        // ✅ Validación de longitud mínima razonable (no exacta)
+        if (newPasswordHash.length() < 50) {
+            throw new IllegalArgumentException("Invalid password hash format");
+        }
+        
         if (newPasswordHash.equals(this.passwordHash)) {
             throw new IllegalArgumentException("New password must be different from the old one");
         }
+        
         this.passwordHash = newPasswordHash;
         this.lastPasswordChange = Instant.now();
         this.passwordResetToken = null;

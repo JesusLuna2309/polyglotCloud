@@ -1,3 +1,4 @@
+
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     token VARCHAR(255) NOT NULL UNIQUE,
@@ -7,7 +8,7 @@ CREATE TABLE refresh_tokens (
     ip_address VARCHAR(45),
     user_agent TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     -- Foreign Key
     CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

@@ -78,10 +78,7 @@ CHECK (locked_until IS NULL OR locked_until > CURRENT_TIMESTAMP - INTERVAL '1 da
 
 -- ==============================================================================
 -- 5. SOFT DELETES
--- ==============================================================================
-
--- Agregar columna de soft delete
-ALTER TABLE users ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
+-- ==============================================================================L;
 
 -- Índice parcial para consultas normales (excluir borrados)
 CREATE INDEX idx_users_not_deleted ON users(id, email, username) WHERE deleted_at IS NULL;
@@ -166,6 +163,6 @@ WHERE deleted_at IS NULL;
 COMMENT ON INDEX idx_users_active_only IS 'Partial index: Only active users for performance';
 COMMENT ON INDEX idx_users_email_lower IS 'Case-insensitive unique email index';
 COMMENT ON INDEX idx_users_username_search IS 'Trigram search for fuzzy username matching';
-COMMENT ON CONSTRAINT check_email_format IS 'Email format validation at database level';
+COMMENT ON CONSTRAINT check_email_format ON USERS IS 'Email format validation at database level';
 COMMENT ON COLUMN users.deleted_at IS 'Soft delete timestamp - NULL means not deleted';
 COMMENT ON FUNCTION soft_delete_user IS 'Safely soft-delete user with cleanup';

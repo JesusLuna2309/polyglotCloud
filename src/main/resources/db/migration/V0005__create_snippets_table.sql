@@ -10,7 +10,6 @@ CREATE TABLE snippets (
     is_public BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     -- Foreign Keys
     CONSTRAINT fk_snippets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_snippets_language FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT,

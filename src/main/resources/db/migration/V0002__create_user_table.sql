@@ -1,10 +1,11 @@
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(60) NOT NULL,
+    password_hash VARCHAR(200) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'USER',
     is_active BOOLEAN NOT NULL DEFAULT true,
     email_verified BOOLEAN NOT NULL DEFAULT false,
@@ -19,8 +20,7 @@ CREATE TABLE users (
     last_password_change TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
-
+    deleted_at TIMESTAMP DEFAULT NULL
 );
 
 -- Índices para optimización
