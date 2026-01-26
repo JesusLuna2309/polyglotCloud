@@ -62,7 +62,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 50, updatable = false)
     private String username;
 
-    @Column(name = "password_hash", nullable = false, length = 60)
+    @Column(name = "password_hash", nullable = false, length = 200)
     @Setter(AccessLevel.NONE)
     private String passwordHash;
 
