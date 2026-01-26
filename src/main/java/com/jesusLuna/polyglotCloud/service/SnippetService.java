@@ -1,6 +1,7 @@
 package com.jesusLuna.polyglotCloud.service;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,8 @@ public class SnippetService {
     private final SnippetRepository snippetRepository;
     private final LanguageRepository languageRepository;
     private final UserRepository userRepository;
+    private final CacheService cacheService;
+
 
     @Transactional
     public Snippet createSnippet(SnippetDTO.SnippetCreateRequest request, UUID userId) {
@@ -66,9 +69,23 @@ public class SnippetService {
     }
 
     public Snippet getSnippetById(UUID id) {
-        log.debug("Fetching snippet with id: {}", id);
-        return snippetRepository.findById(id)
+        String cacheKey = "snippet:" + id;
+        
+        // Intentar obtener del caché
+        Snippet cached = (Snippet) cacheService.get(cacheKey);
+        if (cached != null) {
+            log.debug("Snippet found in cache: {}", id);
+            return cached;
+        }
+
+        // Si no está en caché, buscar en BD
+        Snippet snippet = snippetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Snippet", "id", id));
+        
+        // Guardar en caché por 10 minutos
+        cacheService.save(cacheKey, snippet, 10, TimeUnit.MINUTES);
+        
+        return snippet;
     }
 
     public Page<Snippet> listPublicSnippets(Pageable pageable) {
@@ -193,6 +210,8 @@ public class SnippetService {
         snippet.softDelete();
         snippetRepository.save(snippet);
         log.info("Snippet soft deleted successfully with id: {}", id);
+        cacheService.delete("snippet:" + id);
+        cacheService.deletePattern("snippets:*"); // Invalidar listas
     }
 
     @Transactional

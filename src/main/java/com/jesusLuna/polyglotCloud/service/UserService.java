@@ -2,6 +2,9 @@ package com.jesusLuna.polyglotCloud.service;
 
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,7 +58,7 @@ public class UserService {
         log.info("User created successfully with id: {} by admin: {}", saved.getId(), creatorId);
         return saved;
     }
-
+    @Cacheable(value = "users", key = "#id")
     public User getUserById(UUID id) {
     log.debug("Fetching active user with id: {}", id);
     return userRepository.findByIdAndDeletedAtIsNull(id)
@@ -93,6 +96,7 @@ public class UserService {
         return userRepository.findByActiveTrueAndDeletedAtIsNull(pageable);
     }
 
+    @CachePut(value = "users", key = "#result.id")
     @Transactional
     public User updateUserProfile(UUID userId, UserDTO.UserUpdateRequest request, UUID requesterId) {
         log.debug("Updating user profile {} by user {}", userId, requesterId);
@@ -197,6 +201,7 @@ public class UserService {
         return updated;
     }
 
+    @CacheEvict(value = "users", key = "#id")
     @Transactional
     public void deleteUser(UUID userId, UUID adminId) {
         log.debug("Soft deleting user {} by admin {}", userId, adminId);
@@ -256,6 +261,11 @@ public class UserService {
         User restored = userRepository.save(user);
         log.info("User {} restored successfully by admin {}", userId, adminId);
         return restored;
+    }
+
+    @CacheEvict(value = "users", allEntries = true)
+    public void clearAllUsersCache() {
+        log.info("Clearing all users cache");
     }
 
     public boolean isUsernameAvailable(String username) {
