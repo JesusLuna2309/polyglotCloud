@@ -2,11 +2,11 @@ spring:
   application:
     name: polyglotCloud
 
-  # ✅ CONFIGURACIÓN DE BASE DE DATOS (TE FALTA ESTO)
+  # ✅ CONFIGURACIÓN DE BASE DE DATOS
   datasource:
     url: jdbc:postgresql://localhost:5432/polyglotcloud_db
-    username: postgres  # Tu usuario de PostgreSQL
-    password: admin  # Tu contraseña de PostgreSQL
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:your_password_here}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -14,7 +14,7 @@ spring:
       idle-timeout: 300000
       connection-timeout: 20000
 
-  # ✅ JPA/HIBERNATE (TE FALTA ESTO)
+  # ✅ JPA/HIBERNATE
   jpa:
     hibernate:
       ddl-auto: none  # Importante: usa Flyway para migraciones
@@ -24,25 +24,25 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-  # ✅ FLYWAY MIGRATIONS (TE FALTA ESTO)
+  # ✅ FLYWAY MIGRATIONS
   flyway:
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
 
-  # ✅ REDIS (TE FALTA ESTO - opcional)
+  # ✅ REDIS (opcional)
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 2000ms
 
-  # CONFIGURACIÓN DE EMAIL (ya la tienes)
+  # CONFIGURACIÓN DE EMAIL
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 2525
-    username: e16cfa543dd8c5
-    password: 3fe7c49bb154a2
+    host: ${MAIL_HOST:smtp.mailtrap.io}
+    port: ${MAIL_PORT:2525}
+    username: ${MAIL_USERNAME:your_email_username}
+    password: ${MAIL_PASSWORD:your_email_password}
     properties:
       mail:
         smtp:
@@ -50,31 +50,32 @@ spring:
           starttls:
             enable: true
           ssl:
-            trust: sandbox.smtp.mailtrap.io
+            trust: ${MAIL_HOST:smtp.mailtrap.io}
 
-# ✅ CONFIGURACIÓN JWT (TE FALTA ESTO)
+# ✅ CONFIGURACIÓN JWT
 app:
   jwt:
-    secret: mi-secreto-jwt-super-seguro-de-al-menos-256-bits-para-firmar-tokens-de-manera-segura-y-post-cuantica
-    expiration-ms: 86400  # 24 horas en segundos
-    issuer: polyglotcloud.com  # ← AGREGAR: nuevo campo requerido
+    secret: ${JWT_SECRET:change-this-secret-key-in-production-to-something-very-secure}
+    expiration-ms: ${JWT_EXPIRATION:86400000}  # 24 horas
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 días
+    issuer: ${JWT_ISSUER:polyglotcloud.com}
     cookie:
-      name: refresh_token
-      expiration-s: 604800  # 7 días
-      secure: false  # true en producción
-      same-site: Lax
+      name: ${JWT_COOKIE_NAME:refresh_token}
+      expiration-s: ${JWT_COOKIE_EXPIRATION:604800}  # 7 días
+      secure: ${JWT_COOKIE_SECURE:false}  # true en producción
+      same-site: ${JWT_COOKIE_SAME_SITE:Lax}
 
-  # CONFIGURACIÓN DE EMAIL (ya la tienes)
+  # CONFIGURACIÓN DE EMAIL
   email:
-    from: noreply@polyglotcloud.com
-    verification-url: http://localhost:8080/auth/verify-email
-    support-email: support@polyglotcloud.com
+    from: ${EMAIL_FROM:noreply@polyglotcloud.com}
+    verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:8080/auth/verify-email}
+    support-email: ${EMAIL_SUPPORT:support@polyglotcloud.com}
 
-# ✅ LOGGING (OPCIONAL PERO ÚTIL)
+# ✅ LOGGING
 logging:
   level:
-    com.jesusLuna.polyglotCloud: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.flywaydb: INFO
-    root: INFO
+    com.jesusLuna.polyglotCloud: ${LOG_LEVEL_APP:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:DEBUG}
+    org.flywaydb: ${LOG_LEVEL_FLYWAY:INFO}
+    root: ${LOG_LEVEL_ROOT:INFO}

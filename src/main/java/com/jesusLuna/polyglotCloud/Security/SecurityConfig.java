@@ -28,7 +28,7 @@ public class SecurityConfig {
                 // 🌐 SWAGGER/OpenAPI - Acceso público
                 .requestMatchers(
                     "/swagger-ui/**",
-                    "/swagger-ui.html",
+                    "/index.html",
                     "/v3/api-docs/**",
                     "/api-docs/**",
                     "/webjars/**"
@@ -37,7 +37,7 @@ public class SecurityConfig {
                 // 🔓 ENDPOINTS PÚBLICOS DE AUTENTICACIÓN
                 .requestMatchers(
                     "/auth/login",
-                    "/auth/register", 
+                    "/auth/register",
                     "/auth/refresh-token",
                     "/auth/verify-email"
                 ).permitAll()
@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
                 
                 // 🔒 TODO LO DEMÁS REQUIERE AUTENTICACIÓN
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             );
 
         return http.build();

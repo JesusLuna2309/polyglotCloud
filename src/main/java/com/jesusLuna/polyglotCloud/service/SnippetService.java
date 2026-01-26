@@ -17,7 +17,7 @@ import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.SnippetStatus;
 import com.jesusLuna.polyglotCloud.repository.LanguageRepository;
 import com.jesusLuna.polyglotCloud.repository.SnippetRepository;
-import com.jesusLuna.polyglotCloud.repository.UserRespository;
+import com.jesusLuna.polyglotCloud.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class SnippetService {
 
     private final SnippetRepository snippetRepository;
     private final LanguageRepository languageRepository;
-    private final UserRespository userRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public Snippet createSnippet(SnippetDTO.SnippetCreateRequest request, UUID userId) {

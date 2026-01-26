@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,7 +28,7 @@ import com.jesusLuna.polyglotCloud.models.Snippet;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.models.enums.SnippetStatus;
-import com.jesusLuna.polyglotCloud.repository.UserRespository;
+import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.service.SnippetService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,8 +49,9 @@ public class SnippetController {
 
     private final SnippetService snippetService;
     private final SnippetMapper snippetMapper;
-    private final UserRespository userRepository;
+    private final UserRepository userRepository;
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping
     @Operation(summary = "Listar snippets", description = "Obtiene una lista paginada. Si no hay filtros, devuelve los del usuario actual.")
     public ResponseEntity<Page<SnippetDTO.SnippetSummaryResponse>> listSnippets(
@@ -97,6 +99,7 @@ public class SnippetController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/public")
     @Operation(summary = "Listar snippets públicos", description = "Muro público: obtiene snippets paginados con estado PUBLISHED")
     public ResponseEntity<Page<SnippetDTO.SnippetPublicResponse>> listPublicSnippets(
@@ -113,6 +116,7 @@ public class SnippetController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/search")
     @Operation(summary = "Search snippets", description = "Full-text search in snippets")
     public ResponseEntity<Page<SnippetDTO.SnippetPublicResponse>> searchSnippets(
@@ -132,6 +136,7 @@ public class SnippetController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}")
     @Operation(summary = "Obtener detalle de snippet", description = "Obtiene los datos completos")
     public ResponseEntity<SnippetDTO.SnippetDetailResponse> getSnippet(
@@ -164,6 +169,7 @@ public class SnippetController {
         return ResponseEntity.ok(snippetMapper.toDetailResponse(snippet));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     @Operation(summary = "Crear snippet", description = "Crea un nuevo snippet de código")
     public ResponseEntity<SnippetDTO.SnippetDetailResponse> createSnippet(
@@ -184,6 +190,7 @@ public class SnippetController {
                 .body(snippetMapper.toDetailResponse(created));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar snippet", description = "Actualiza los datos de un snippet existente")
     public ResponseEntity<SnippetDTO.SnippetDetailResponse> updateSnippet(
@@ -204,6 +211,7 @@ public class SnippetController {
         return ResponseEntity.ok(snippetMapper.toDetailResponse(updated));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar snippet", description = "Elimina lógicamente un snippet (soft delete)")
     public ResponseEntity<Void> deleteSnippet(
@@ -223,6 +231,7 @@ public class SnippetController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{originalId}/translate")
     @Operation(
         summary = "Traducir snippet a otro lenguaje",

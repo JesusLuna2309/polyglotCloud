@@ -25,7 +25,7 @@ import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.mapper.UserMapper;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
-import com.jesusLuna.polyglotCloud.repository.UserRespository;
+import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,10 +51,11 @@ public class UserController {
 
     private final UserService userService;
 
-    private final UserRespository userRepository;
+    private final UserRepository userRepository;
 
     private final UserMapper userMapper;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     @Operation(summary = "List users", description = "List and filter users (Admin only)")
     public ResponseEntity<Page<UserDTO.UserAdminResponse>> listUsers(
@@ -85,6 +86,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or #id.toString() == principal.username")
     @GetMapping("/{id}")
     @Operation(summary = "Get user details", description = "Get details of a specific user")
     @ApiResponses(value = {
@@ -126,6 +128,7 @@ public class UserController {
         // C) Si es otro usuario normal viendo a alguien más -> Solo info pública
         return ResponseEntity.ok(userMapper.toPublicResponse(user));
     }
+    @PreAuthorize("hasRole('ADMIN') or #id.toString() == principal.username")
     @PutMapping("/{id}")
     @Operation(summary = "Update user profile", description = "Update user profile information")
     public ResponseEntity<Object> updateUserProfile(
@@ -187,6 +190,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toAdminResponse(updated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/role")
     @Operation(summary = "Update user role", description = "Update user role (Admin only)")
     public ResponseEntity<UserDTO.UserAdminResponse> updateUserRole(
@@ -211,6 +215,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toAdminResponse(updated));
     }
 
+    @PreAuthorize("hasRole('ADMIN') or #id.toString() == principal.username")
     @PutMapping("/{id}/password")
     @Operation(summary = "Change password", description = "Change user password")
     public ResponseEntity<Void> changePassword(
@@ -239,6 +244,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user", description = "Soft delete user account (Admin only)")
     public ResponseEntity<Void> deleteUser(

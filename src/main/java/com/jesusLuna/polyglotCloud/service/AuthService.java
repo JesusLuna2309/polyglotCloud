@@ -12,7 +12,7 @@ import com.jesusLuna.polyglotCloud.dto.UserDTO.AuthResponseWithCookies;
 import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
-import com.jesusLuna.polyglotCloud.repository.UserRespository;
+import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
 import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRespository userRepository;
+    private final UserRepository userRepository;
     private final PostQuantumPasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -52,6 +52,8 @@ public class AuthService {
                 .email(request.email())
                 .active(true)
                 .emailVerified(false)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
         
         // Hash password con post-quantum security
@@ -83,7 +85,7 @@ public class AuthService {
         log.info("Login attempt for: {}", login);
         
         // Find user by username or email
-        User user = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(userAgent, login)
+        User user = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(request.login(), request.login())
                 .orElseThrow(() -> new BusinessRuleException("Invalid credentials"));
         
         // Verificar si la cuenta está activa

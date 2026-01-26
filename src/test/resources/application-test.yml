@@ -1,0 +1,48 @@
+# Test Configuration
+spring:
+    profiles:
+        active: test
+    datasource:
+        url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+        driver-class-name: org.h2.Driver
+        username: sa
+        password: ""
+    jpa:
+        hibernate:
+            ddl-auto: create-drop
+        show-sql: true
+        properties:
+            hibernate:
+                format_sql: true
+        database-platform: org.hibernate.dialect.H2Dialect
+    # Flyway configuration for tests
+    flyway:
+        enabled: false
+    # Email configuration for tests (disabled)
+    mail:
+        host: localhost
+        port: 25
+        username: test
+        password: test
+
+# JWT Configuration for tests
+app:
+    jwt:
+        secret: mySecretKey123456789012345678901234567890
+        expiration-ms: 3600000
+        refresh-expiration: 604800000
+        issuer: polyglotCloud-test
+        cookie:
+            name: refreshToken
+            expiration-s: 604800
+            secure: false
+            same-site: Lax
+
+mail:
+    from: test@example.com
+
+# Logging
+logging:
+    level:
+        com.jesusLuna.polyglotCloud: DEBUG
+        org.springframework.security: DEBUG

@@ -67,10 +67,10 @@ public class UserDTO {
                 String password
         ) {}
 
-                public record AuthResponseWithCookies(
-                        UserDTO.UserLoginResponse body,
-                        String refreshToken,
-                        Instant refreshTokenExpiry
+        public record AuthResponseWithCookies(
+                UserDTO.UserLoginResponse body,
+                String refreshToken,
+                Instant refreshTokenExpiry
         ) {}
 
         public record UserLoginRequest(

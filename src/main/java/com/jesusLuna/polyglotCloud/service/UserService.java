@@ -13,7 +13,7 @@ import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
-import com.jesusLuna.polyglotCloud.repository.UserRespository;
+import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class UserService {
 
-    private final UserRespository userRepository;
+    private final UserRepository userRepository;
     private final PostQuantumPasswordEncoder passwordEncoder;
 
     @Transactional

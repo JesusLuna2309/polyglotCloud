@@ -1,9 +1,7 @@
 package com.jesusLuna.polyglotCloud.models;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HexFormat;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;

@@ -1,5 +1,6 @@
 package com.jesusLuna.polyglotCloud.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,8 +16,9 @@ import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 
 @Repository
-public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User>{
+public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User>{
 
+    
     Optional<User> findByIdAndDeletedAtIsNull(UUID id);
 
     Optional<User> findByUsernameAndDeletedAtIsNull(String username);
@@ -30,6 +32,8 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
 
     Optional<User> findByPasswordResetToken(String token); // RESET PASSWORD
 
+    Page<User> findAllByDeletedAtIsNull(Pageable pageable);
+
 
     // Validaciones
 
@@ -41,6 +45,16 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
 
     Page<User> findByDeletedAtIsNull(Pageable pageable);
 
+    List<User> findByEnabledAndDeletedAtIsNull(boolean enabled);
+
+    List<User> findByEmailVerifiedAndDeletedAtIsNull(boolean emailVerified);
+
+    List<User> findByEmailVerifiedFalseAndDeletedAtIsNull();
+
+    List<User> findByEmailVerifiedTrueAndDeletedAtIsNull();
+
+    List<User> findUsersWithSnippets();
+
 
     @Query("SELECT u FROM User u WHERE u.id = :id")
     Optional<User> findByIdIncludingDeleted(@Param("id") UUID id);
@@ -48,6 +62,9 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
     boolean existsByUsernameAndDeletedAtIsNull(String username);
     boolean existsByEmailAndDeletedAtIsNull(String email);
     
+    boolean existsByEmailAndDeletedAtIsNullAndIdNot(String email, UUID id);
+
+    boolean existsByUsernameAndDeletedAtIsNullAndIdNot(String username, UUID id);
 
 
     @Query("SELECT u FROM User u " +
@@ -68,6 +85,9 @@ public interface UserRespository extends JpaRepository<User, UUID>, JpaSpecifica
     long countByRole(@Param("role") Role role);
 
     long countByRoleAndDeletedAtIsNull(Role role);
+    
+    long countByEnabledAndDeletedAtIsNull(boolean enabled);
 
+    long countByEmailVerifiedAndDeletedAtIsNull(boolean emailVerified);
 
 }
