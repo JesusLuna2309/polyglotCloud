@@ -14,7 +14,7 @@ import com.jesusLuna.polyglotCloud.models.Language;
 public interface LanguageRepository  extends JpaRepository<Language, UUID>{
 
     Optional<Language> findByCode(String code);
-    Optional<Language> findByName(String name);
+    Optional<Language> findByNameIgnoreCase(String name);
     List<Language> findAllByOrderByNameAsc();
 
     /**

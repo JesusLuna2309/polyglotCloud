@@ -45,7 +45,7 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     Page<User> findByDeletedAtIsNull(Pageable pageable);
 
-    List<User> findByEnabledAndDeletedAtIsNull(boolean enabled);
+    List<User> findByActiveAndDeletedAtIsNull(boolean enabled);
 
     List<User> findByEmailVerifiedAndDeletedAtIsNull(boolean emailVerified);
 
@@ -53,6 +53,7 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     List<User> findByEmailVerifiedTrueAndDeletedAtIsNull();
 
+    @Query("SELECT DISTINCT u FROM User u JOIN Snippet s ON s.user.id = u.id WHERE u.deletedAt IS NULL")
     List<User> findUsersWithSnippets();
 
 
@@ -86,7 +87,7 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     long countByRoleAndDeletedAtIsNull(Role role);
     
-    long countByEnabledAndDeletedAtIsNull(boolean enabled);
+    long countByActiveAndDeletedAtIsNull(boolean active);
 
     long countByEmailVerifiedAndDeletedAtIsNull(boolean emailVerified);
 
