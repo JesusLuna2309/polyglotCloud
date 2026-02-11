@@ -29,6 +29,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
+    private final UserAuditService userAuditService;
 
     //TODO: Agregar readonly en @Transactional(readOnly = true) a los métodos que no modifiquen datos (en el service)
 
@@ -78,7 +79,7 @@ public class AuthService {
     }
 
     @Transactional
-    public UserDTO.AuthResponseWithCookies login(UserDTO.UserLoginRequest request, String ipAddress, String userAgent) {
+        public UserDTO.AuthResponseWithCookies login(UserDTO.UserLoginRequest request, String ipAddress, String userAgent) {
         String login = request.login();
         String password = request.password();
         
@@ -125,7 +126,6 @@ public class AuthService {
             
             Instant expiresAt = jwtTokenProvider.getExpirationFromToken(token);
             
-            
             log.info("Login successful for user: {}", user.getUsername());
             
            // 1. Crear el refresh token
@@ -145,18 +145,13 @@ public class AuthService {
                     refreshTokenEntity.getExpiresAt()
             );
             
-        } catch (BadCredentialsException ex) {
-            log.warn("Invalid credentials for: {}", login);
+        } catch (Exception ex) {
+            log.warn("Login failed for: {} - {}", login, ex.getMessage());
             
-            // Record failed login
-            user.recordFailedLogin();
-            userRepository.save(user);
+            // ✅ USAR EL SERVICIO SEPARADO - TRANSACCIÓN INDEPENDIENTE
+            userAuditService.recordFailedLoginAttempt(user.getId());
             
-            throw new BusinessRuleException("Invalid credentials");
-            
-        } catch (BusinessRuleException ex) {
-            log.error("Login error for user: {}", login, ex);
-            throw new BusinessRuleException("Login failed");
+            throw ex; // Re-throw para que el controlador maneje la respuesta
         }
     }
 
@@ -241,6 +236,8 @@ public class AuthService {
                 newRefreshToken.getExpiresAt()
         );
     }
+
+
 
 
     private UserDTO.UserResponse toUserResponse(User user) {

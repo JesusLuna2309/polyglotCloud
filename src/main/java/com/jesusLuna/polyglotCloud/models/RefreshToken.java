@@ -4,9 +4,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,6 +27,7 @@ import lombok.NoArgsConstructor;
     @Index(name = "idx_refresh_tokens_token", columnList = "token", unique = true),
     @Index(name = "idx_refresh_tokens_expires_at", columnList = "expires_at")
 })
+@EntityListeners(AuditingEntityListener.class)
 @Data
 @Builder
 @NoArgsConstructor
@@ -37,7 +40,7 @@ public class RefreshToken {
     private UUID id;
 
     @NotBlank(message = "Token is required")
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true, length = 512)
     private String token;
 
     @NotNull(message = "User ID is required")

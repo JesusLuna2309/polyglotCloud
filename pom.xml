@@ -24,7 +24,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <bucket4j.version>8.10.1</bucket4j.version>
         <jjwt.version>0.12.3</jjwt.version>
-        <springdoc.version>2.2.0</springdoc.version>
+        <springdoc.version>2.7.0</springdoc.version>
 		<testcontainers.version>1.20.4</testcontainers.version>
         
         <!-- Encoding UTF-8 -->

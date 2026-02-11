@@ -147,7 +147,7 @@ public class AuthController {
         return ResponseCookie.from(cookieName, token) // Usa el nombre de application.properties
                 .httpOnly(true)
                 .secure(cookieSecure)  // Usa true/false según application.properties
-                .path("/api/auth")
+                .path("/auth")
                 .maxAge(maxAge)
                 .sameSite(cookieSameSite) // Usa Strict/Lax según properties
                 .build();
