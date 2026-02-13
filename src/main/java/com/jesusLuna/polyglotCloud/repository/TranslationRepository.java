@@ -21,8 +21,13 @@ public interface TranslationRepository extends JpaRepository<Translation, UUID> 
     @EntityGraph(attributePaths = {"sourceSnippet", "sourceLanguage", "targetLanguage", "requestedBy"})
     Optional<Translation> findById(UUID id);
 
+
+
     @Query("SELECT t FROM Translation t WHERE t.requestedBy.id = :userId ORDER BY t.createdAt DESC")
     Page<Translation> findByRequestedByIdOrderByCreatedAtDesc(@Param("userId") UUID userId, Pageable pageable);
+
+    Page<Translation> findByStatus(TranslationStatus status, Pageable pageable);
+
 
     @Query("SELECT t FROM Translation t WHERE t.status = :status ORDER BY t.createdAt ASC")
     List<Translation> findByStatusOrderByCreatedAtAsc(@Param("status") TranslationStatus status);
