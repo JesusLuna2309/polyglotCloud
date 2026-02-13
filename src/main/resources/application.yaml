@@ -4,7 +4,7 @@ spring:
 
   # ✅ CONFIGURACIÓN DE BASE DE DATOS
   datasource:
-    url: jdbc:postgresql://localhost:5432/polyglotcloud_db
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/polyglotcloud_db}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:your_password_here}
     driver-class-name: org.postgresql.Driver

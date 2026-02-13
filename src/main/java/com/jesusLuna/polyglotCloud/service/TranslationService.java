@@ -7,11 +7,14 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jesusLuna.polyglotCloud.dto.TranslationDTO;
+import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
 import com.jesusLuna.polyglotCloud.models.Language;
 import com.jesusLuna.polyglotCloud.models.Snippet;
 import com.jesusLuna.polyglotCloud.models.Translation;
@@ -20,6 +23,7 @@ import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
 import com.jesusLuna.polyglotCloud.repository.LanguageRepository;
 import com.jesusLuna.polyglotCloud.repository.SnippetRepository;
 import com.jesusLuna.polyglotCloud.repository.TranslationRepository;
+import com.jesusLuna.polyglotCloud.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +37,8 @@ public class TranslationService {
     private final SnippetRepository snippetRepository;
     private final LanguageRepository languageRepository;
     private final CacheService cacheService;
+    private final TranslationMapper translationMapper;
+    private final UserRepository userRepository;
 
     @Transactional
     public Translation requestTranslation(TranslationDTO.TranslationRequest request, User requestedBy) {
@@ -69,6 +75,20 @@ public class TranslationService {
         log.debug("Fetching translation with id: {}", id);
         return translationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Translation", "id", id));
+    }
+
+    /**
+     * Obtiene traducciones por estado con paginación
+     */
+    @Transactional(readOnly = true)
+    public Page<TranslationDTO.TranslationResponse> getTranslationsByStatus(
+            TranslationStatus status, Pageable pageable) {
+        
+        log.debug("Getting translations with status: {}", status);
+        
+        Page<Translation> translations = translationRepository.findByStatus(status, pageable);
+        
+        return translations.map(translationMapper::toResponse);
     }
 
     public Page<Translation> getUserTranslations(UUID userId, Pageable pageable) {
@@ -161,6 +181,45 @@ public class TranslationService {
                 sourceCode,
                 generateMockTranslation(sourceCode, toLanguage));
     }
+
+    @Transactional
+        public TranslationDTO.TranslationResponse submitForReview(UUID translationId, UUID userId) {
+            Translation translation = getTranslationById(translationId);
+            
+            // Verificar que es el autor
+            if (!translation.getRequestedBy().getId().equals(userId)) {
+                throw new ForbiddenAccessException("Only the author can submit for review");
+            }
+            
+            // Cambiar estado
+            translation.changeStatus(TranslationStatus.UNDER_REVIEW, null, null);
+            
+            return translationMapper.toResponse(translationRepository.save(translation));
+        }
+
+        @Transactional
+        @PreAuthorize("hasRole('MODERATOR')")
+        public TranslationDTO.TranslationResponse approveTranslation(UUID translationId, UUID reviewerId, String notes) {
+            Translation translation = getTranslationById(translationId);
+            User reviewer = userRepository.findById(reviewerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reviewer not found"));
+            
+            translation.changeStatus(TranslationStatus.APPROVED, reviewer, notes);
+            
+            return translationMapper.toResponse(translationRepository.save(translation));
+        }
+
+        @Transactional 
+        @PreAuthorize("hasRole('MODERATOR')")
+        public TranslationDTO.TranslationResponse rejectTranslation(UUID translationId, UUID reviewerId, String notes) {
+            Translation translation = getTranslationById(translationId);
+            User reviewer = userRepository.findById(reviewerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reviewer not found"));
+            
+            translation.changeStatus(TranslationStatus.REJECTED, reviewer, notes);
+            
+            return translationMapper.toResponse(translationRepository.save(translation));
+        }
 
     private String generateMockTranslation(String sourceCode, String targetLanguage) {
         // Mock translation basado en el lenguaje objetivo

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ import com.jesusLuna.polyglotCloud.dto.TranslationDTO;
 import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
 import com.jesusLuna.polyglotCloud.models.Translation;
 import com.jesusLuna.polyglotCloud.models.User;
+import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.service.TranslationService;
 
@@ -46,7 +48,7 @@ public class TranslationController {
 
     @PostMapping
     @Operation(
-        summary = "Request code translation", 
+        summary = "Request code translation",
         description = "Requests asynchronous translation of a code snippet to another programming language"
     )
     @ApiResponses({
@@ -121,5 +123,69 @@ public class TranslationController {
         Page<TranslationDTO.TranslationStatusResponse> response = translations.map(translationMapper::toStatusResponse);
         
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Enviar traducción para revisión (solo autor)
+     */
+    @PostMapping("/{id}/submit-review")
+    @Operation(summary = "Submit translation for review", description = "Submit translation for moderation review")
+    public ResponseEntity<TranslationDTO.TranslationResponse> submitForReview(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        UUID userId = UUID.fromString(userDetails.getUsername());
+        TranslationDTO.TranslationResponse response = translationService.submitForReview(id, userId);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Aprobar traducción (solo moderadores)
+     */
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('MODERATOR')")
+    @Operation(summary = "Approve translation", description = "Approve translation (moderators only)")
+    public ResponseEntity<TranslationDTO.TranslationResponse> approveTranslation(
+            @PathVariable UUID id,
+            @RequestBody @Valid TranslationDTO.ModerationRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        UUID reviewerId = UUID.fromString(userDetails.getUsername());
+        TranslationDTO.TranslationResponse response = translationService.approveTranslation(id, reviewerId, request.notes());
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Rechazar traducción (solo moderadores)
+     */
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('MODERATOR')")
+    @Operation(summary = "Reject translation", description = "Reject translation (moderators only)")
+    public ResponseEntity<TranslationDTO.TranslationResponse> rejectTranslation(
+            @PathVariable UUID id,
+            @RequestBody @Valid TranslationDTO.ModerationRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        UUID reviewerId = UUID.fromString(userDetails.getUsername());
+        TranslationDTO.TranslationResponse response = translationService.rejectTranslation(id, reviewerId, request.notes());
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Obtener traducciones pendientes de revisión (solo moderadores)
+     */
+    @GetMapping("/pending-review")
+    @PreAuthorize("hasRole('MODERATOR')")
+    @Operation(summary = "Get translations pending review", description = "Get all translations waiting for moderation")
+    public ResponseEntity<Page<TranslationDTO.TranslationResponse>> getPendingTranslations(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        
+        Page<TranslationDTO.TranslationResponse> translations = translationService.getTranslationsByStatus(
+            TranslationStatus.UNDER_REVIEW, pageable);
+        
+        return ResponseEntity.ok(translations);
     }
 }

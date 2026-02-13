@@ -72,6 +72,16 @@ public class Translation {
     @Builder.Default
     private TranslationStatus status = TranslationStatus.PENDING;
 
+        @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+    
+    @Column(name = "review_notes", columnDefinition = "TEXT")
+    private String reviewNotes;
+    
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
     @Column(name = "error_message")
     @Size(max = 1000)
     private String errorMessage;
@@ -92,4 +102,21 @@ public class Translation {
 
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    public void changeStatus(TranslationStatus newStatus, User reviewer, String notes) {
+        if (!this.status.canTransitionTo(newStatus)) {
+            throw new IllegalStateException(
+                String.format("Cannot transition from %s to %s", this.status, newStatus)
+            );
+        }
+        
+        this.status = newStatus;
+        
+        // Si es una acción de moderación, registrar revisor
+        if (newStatus == TranslationStatus.APPROVED || newStatus == TranslationStatus.REJECTED) {
+            this.reviewedBy = reviewer;
+            this.reviewNotes = notes;
+            this.reviewedAt = Instant.now();
+        }
+    }
 }
