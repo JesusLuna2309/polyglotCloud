@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.jesusLuna.polyglotCloud.models.Translation;
+import com.jesusLuna.polyglotCloud.models.Translations.Translation;
 import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
 
 @Repository

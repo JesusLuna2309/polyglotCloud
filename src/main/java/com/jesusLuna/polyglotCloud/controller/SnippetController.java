@@ -1,8 +1,10 @@
 package com.jesusLuna.polyglotCloud.controller;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -24,14 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jesusLuna.polyglotCloud.dto.SnippetDTO;
 import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.mapper.SnippetMapper;
+import com.jesusLuna.polyglotCloud.models.CustomUserPrincipal;
 import com.jesusLuna.polyglotCloud.models.Snippet;
 import com.jesusLuna.polyglotCloud.models.User;
-import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.models.enums.SnippetStatus;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.service.SnippetService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +57,21 @@ public class SnippetController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping
-    @Operation(summary = "Listar snippets", description = "Obtiene una lista paginada. Si no hay filtros, devuelve los del usuario actual.")
+    @Operation(
+        summary = "Listar snippets", 
+        description = "Obtiene una lista paginada. Si no hay filtros, devuelve los del usuario actual.",
+        parameters = {
+            @Parameter(
+                name = "sort",
+                description = "Criterios de ordenamiento. Formato: 'campo,direccion'. Ejemplos: 'createdAt,desc', 'title,asc'",
+                examples = {
+                    @ExampleObject(name = "Por fecha descendente", value = "createdAt,desc"),
+                    @ExampleObject(name = "Por título ascendente", value = "title,asc"),
+                    @ExampleObject(name = "Por estado descendente", value = "status,desc")
+                }
+            )
+        }
+    )
     public ResponseEntity<Page<SnippetDTO.SnippetSummaryResponse>> listSnippets(
             // Filtros opcionales
             @RequestParam(required = false) UUID userId,
@@ -62,35 +80,45 @@ public class SnippetController {
             // Paginación
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             
-            // Inyectamos al usuario autenticado (¡Adiós SecurityContextHolder manual!)
-            @AuthenticationPrincipal User userPrincipal
+            // Usa CustomUserPrincipal en lugar de User directamente
+            @AuthenticationPrincipal CustomUserPrincipal userPrincipal
     ) {
+        // Debug logging para identificar el problema
+        log.debug("Received pageable: {}", pageable);
+        log.debug("Sort: {}", pageable.getSort());
+    
+        // Validar que el sort sea seguro
+        Pageable safePage = validateAndFixPageable(pageable);
+
+        // Obtén la entidad User desde el CustomUserPrincipal
+        User currentUser = userPrincipal.getUser();
 
         Page<Snippet> snippets;
 
-       // 1. Si piden snippets de un usuario específico
+        // 1. Si piden snippets de un usuario específico
         if (userId != null) {
             
-            // A) Soy YO mismo O soy ADMIN -> Veo TODO (Borradores, privados, etc)
-            if (userId.equals(userPrincipal.getId()) || userPrincipal.getRole() == Role.ADMIN) {
-                snippets = snippetService.listSnippetsByUser(userId, pageable);
-            }
-            
-            // B) Es OTRO usuario -> Solo veo sus PUBLICOS (Modo "Ver Perfil")
-            else {
-                 // ¡Necesitas este método en tu servicio!
-                snippets = snippetService.listSnippetsByUserAndStatus(SnippetStatus.PUBLISHED, userId, pageable);
-            }
-            
+    
+                // A) Soy YO mismo O soy ADMIN -> Veo TODO (Borradores, privados, etc)
+                if (userId.equals(currentUser.getId()) || currentUser.getRole().isAdmin()) {
+                    snippets = snippetService.listSnippetsByUser(userId, safePage);
+                }
+                // B) Es OTRO usuario -> Solo veo sus PUBLICOS (Modo "Ver Perfil")
+                else {
+                    snippets = snippetService.listSnippetsByUserAndStatus(SnippetStatus.PUBLISHED, userId, safePage);
+                }
+                
         }
+            
+        
         // 2. Si piden filtrar por estado (ej: solo PUBLISHED)
         else if (status != null) {
-             // Aquí asumo que quieres ver TUS snippets con ese estado
-            snippets = snippetService.listSnippetsByUserAndStatus(status,userPrincipal.getId(), pageable);
+            // Aquí asumo que quieres ver TUS snippets con ese estado
+            snippets = snippetService.listSnippetsByUserAndStatus(status, currentUser.getId(), safePage);
         }
         // 3. Por defecto: Listar MIS snippets (todos los estados)
         else {
-            snippets = snippetService.listSnippetsByUser(userPrincipal.getId(), pageable);
+            snippets = snippetService.listSnippetsByUser(currentUser.getId(), safePage);
         }
 
         // Convertir entidad a DTO
@@ -98,6 +126,7 @@ public class SnippetController {
         
         return ResponseEntity.ok(response);
     }
+    
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/public")
@@ -254,4 +283,37 @@ public class SnippetController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(snippetMapper.toDetailResponse(translation));
     }
+
+    /**
+     * Valida y corrige el Pageable para evitar problemas de sort
+     */
+    private Pageable validateAndFixPageable(Pageable pageable) {
+        // Lista de campos permitidos para ordenamiento
+        Set<String> allowedSortFields = Set.of(
+            "id", "title", "createdAt", "updatedAt", 
+            "language.name", "user.username", "status"
+        );
+        
+        Sort validatedSort = Sort.unsorted();
+        
+        for (Sort.Order order : pageable.getSort()) {
+            String property = order.getProperty();
+            
+            // Solo permitir campos seguros
+            if (allowedSortFields.contains(property)) {
+                validatedSort = validatedSort.and(Sort.by(order.getDirection(), property));
+            } else {
+                log.warn("Ignoring unsafe sort property: {}", property);
+            }
+        }
+        
+        // Si no hay sort válido, usar el default
+        if (validatedSort.isUnsorted()) {
+            validatedSort = Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+        
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), validatedSort);
+    }
+
+    
 }
