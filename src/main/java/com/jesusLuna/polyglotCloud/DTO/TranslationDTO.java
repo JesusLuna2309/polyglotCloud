@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class TranslationDTO {
+        
         public record TranslationRequest(
                 @NotNull(message = "Snippet ID is required")
                 UUID snippetId,
@@ -29,6 +30,8 @@ public class TranslationDTO {
                 String errorMessage,
                 String translationNotes,
                 Long processingTimeMs,
+                Integer currentVersionNumber,
+                Integer totalVersions,
                 Instant createdAt,
                 Instant updatedAt,
                 Instant completedAt
@@ -39,6 +42,8 @@ public class TranslationDTO {
                 TranslationStatus status,
                 String errorMessage,
                 Long processingTimeMs,
+                Integer currentVersionNumber,
+                Integer totalVersions,
                 Instant createdAt,
                 Instant updatedAt,
                 Instant completedAt
@@ -48,7 +53,7 @@ public class TranslationDTO {
          * Request para acciones de moderación
          */
         public record ModerationRequest(
-        @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
-        String notes
+                @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
+                String notes
         ) {}
 }

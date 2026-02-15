@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jesusLuna.polyglotCloud.dto.TranslationDTO;
 import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
-import com.jesusLuna.polyglotCloud.models.Translation;
 import com.jesusLuna.polyglotCloud.models.User;
+import com.jesusLuna.polyglotCloud.models.Translations.Translation;
 import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.service.TranslationService;

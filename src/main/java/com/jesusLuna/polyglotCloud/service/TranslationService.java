@@ -17,12 +17,14 @@ import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
 import com.jesusLuna.polyglotCloud.models.Language;
 import com.jesusLuna.polyglotCloud.models.Snippet;
-import com.jesusLuna.polyglotCloud.models.Translation;
+import com.jesusLuna.polyglotCloud.models.Translations.Translation;
+import com.jesusLuna.polyglotCloud.models.Translations.TranslationVersion;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
 import com.jesusLuna.polyglotCloud.repository.LanguageRepository;
 import com.jesusLuna.polyglotCloud.repository.SnippetRepository;
 import com.jesusLuna.polyglotCloud.repository.TranslationRepository;
+import com.jesusLuna.polyglotCloud.repository.TranslationVersionRepository;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,9 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Transactional(readOnly = true)
 public class TranslationService {
+
     private final TranslationRepository translationRepository;
     private final SnippetRepository snippetRepository;
     private final LanguageRepository languageRepository;
+    private final TranslationVersionRepository versionRepository;
     private final CacheService cacheService;
     private final TranslationMapper translationMapper;
     private final UserRepository userRepository;
@@ -60,6 +64,7 @@ public class TranslationService {
                 .requestedBy(requestedBy)
                 .sourceCode(sourceSnippet.getContent())
                 .status(TranslationStatus.PENDING)
+                .currentVersionNumber(1)
                 .build();
 
         Translation saved = translationRepository.save(translation);
@@ -127,7 +132,10 @@ public class TranslationService {
             translation.setProcessingTimeMs(processingTime);
             translation.setCompletedAt(Instant.now());
 
-            translationRepository.save(translation);
+            Translation savedTranslation = translationRepository.save(translation);
+
+            // Crear versión inicial automáticamente
+            createInitialVersion(savedTranslation, translatedCode);
 
             // Limpiar cache
             cacheService.delete("translation::" + translationId);
@@ -155,6 +163,21 @@ public class TranslationService {
         }
     }
 
+    private void createInitialVersion(Translation translation, String translatedCode) {
+        log.debug("Creating initial version for translation {}", translation.getId());
+        
+        TranslationVersion initialVersion = TranslationVersion.builder()
+                .translation(translation)
+                .versionNumber(1)
+                .translatedCode(translatedCode)
+                .author(translation.getRequestedBy()) // El autor original es quien crea la primera versión
+                .changeNotes("Initial AI-generated translation")
+                .isCurrentVersion(true)
+                .build();
+
+        versionRepository.save(initialVersion);
+    }
+
     private String performTranslation(String sourceCode, String fromLanguage, String toLanguage) {
         log.debug("Translating from {} to {}", fromLanguage, toLanguage);
         
@@ -168,58 +191,47 @@ public class TranslationService {
 
         // Aquí implementarías la integración real con OpenAI, Claude, etc.
         // Por ahora retornamos una traducción simulada
-        return String.format("""
-                // Translated from %s to %s
-                // Original code:
-                // %s
-                
-                // Translated equivalent:
-                %s
-                """, 
-                fromLanguage, 
-                toLanguage, 
-                sourceCode,
-                generateMockTranslation(sourceCode, toLanguage));
+        return generateMockTranslation(sourceCode, toLanguage);
     }
 
     @Transactional
-        public TranslationDTO.TranslationResponse submitForReview(UUID translationId, UUID userId) {
-            Translation translation = getTranslationById(translationId);
-            
-            // Verificar que es el autor
-            if (!translation.getRequestedBy().getId().equals(userId)) {
-                throw new ForbiddenAccessException("Only the author can submit for review");
-            }
-            
-            // Cambiar estado
-            translation.changeStatus(TranslationStatus.UNDER_REVIEW, null, null);
-            
-            return translationMapper.toResponse(translationRepository.save(translation));
+    public TranslationDTO.TranslationResponse submitForReview(UUID translationId, UUID userId) {
+        Translation translation = getTranslationById(translationId);
+        
+        // Verificar que es el autor
+        if (!translation.getRequestedBy().getId().equals(userId)) {
+            throw new ForbiddenAccessException("Only the author can submit for review");
         }
+        
+        // Cambiar estado
+        translation.changeStatus(TranslationStatus.UNDER_REVIEW, null, null);
+        
+        return translationMapper.toResponse(translationRepository.save(translation));
+    }
 
-        @Transactional
-        @PreAuthorize("hasRole('MODERATOR')")
-        public TranslationDTO.TranslationResponse approveTranslation(UUID translationId, UUID reviewerId, String notes) {
-            Translation translation = getTranslationById(translationId);
-            User reviewer = userRepository.findById(reviewerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reviewer not found"));
-            
-            translation.changeStatus(TranslationStatus.APPROVED, reviewer, notes);
-            
-            return translationMapper.toResponse(translationRepository.save(translation));
-        }
+    @Transactional
+    @PreAuthorize("hasRole('MODERATOR')")
+    public TranslationDTO.TranslationResponse approveTranslation(UUID translationId, UUID reviewerId, String notes) {
+        Translation translation = getTranslationById(translationId);
+        User reviewer = userRepository.findById(reviewerId)
+            .orElseThrow(() -> new ResourceNotFoundException("Reviewer not found"));
+        
+        translation.changeStatus(TranslationStatus.APPROVED, reviewer, notes);
+        
+        return translationMapper.toResponse(translationRepository.save(translation));
+    }
 
-        @Transactional 
-        @PreAuthorize("hasRole('MODERATOR')")
-        public TranslationDTO.TranslationResponse rejectTranslation(UUID translationId, UUID reviewerId, String notes) {
-            Translation translation = getTranslationById(translationId);
-            User reviewer = userRepository.findById(reviewerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reviewer not found"));
-            
-            translation.changeStatus(TranslationStatus.REJECTED, reviewer, notes);
-            
-            return translationMapper.toResponse(translationRepository.save(translation));
-        }
+    @Transactional 
+    @PreAuthorize("hasRole('MODERATOR')")
+    public TranslationDTO.TranslationResponse rejectTranslation(UUID translationId, UUID reviewerId, String notes) {
+        Translation translation = getTranslationById(translationId);
+        User reviewer = userRepository.findById(reviewerId)
+            .orElseThrow(() -> new ResourceNotFoundException("Reviewer not found"));
+        
+        translation.changeStatus(TranslationStatus.REJECTED, reviewer, notes);
+        
+        return translationMapper.toResponse(translationRepository.save(translation));
+    }
 
     private String generateMockTranslation(String sourceCode, String targetLanguage) {
         // Mock translation basado en el lenguaje objetivo

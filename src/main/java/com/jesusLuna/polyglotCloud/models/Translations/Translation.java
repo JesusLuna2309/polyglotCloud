@@ -1,14 +1,21 @@
-package com.jesusLuna.polyglotCloud.models;
+package com.jesusLuna.polyglotCloud.models.Translations;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.jesusLuna.polyglotCloud.models.Language;
+import com.jesusLuna.polyglotCloud.models.Snippet;
+import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
+import com.jesusLuna.polyglotCloud.models.Translations.TranslationVersion;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -20,6 +27,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -103,7 +111,15 @@ public class Translation {
     @Column(name = "completed_at")
     private Instant completedAt;
 
-    public void changeStatus(TranslationStatus newStatus, User reviewer, String notes) {
+    @OneToMany(mappedBy = "translation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<TranslationVersion> versions = new ArrayList<>();
+
+    @Column(name = "current_version_number", nullable = false)
+    @Builder.Default
+    private Integer currentVersionNumber = 1;
+
+        public void changeStatus(TranslationStatus newStatus, User reviewer, String notes) {
         if (!this.status.canTransitionTo(newStatus)) {
             throw new IllegalStateException(
                 String.format("Cannot transition from %s to %s", this.status, newStatus)
@@ -118,5 +134,30 @@ public class Translation {
             this.reviewNotes = notes;
             this.reviewedAt = Instant.now();
         }
+    }
+
+    /**
+     * Obtiene la versión actual de la traducción
+     */
+    public TranslationVersion getCurrentVersion() {
+        return versions.stream()
+                .filter(TranslationVersion::getIsCurrentVersion)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Actualiza el número de versión actual
+     */
+    public void updateCurrentVersionNumber() {
+        this.currentVersionNumber = versions.size();
+    }
+
+    /**
+     * Obtiene el código traducido actual (de la versión actual)
+     */
+    public String getCurrentTranslatedCode() {
+        TranslationVersion currentVersion = getCurrentVersion();
+        return currentVersion != null ? currentVersion.getTranslatedCode() : this.translatedCode;
     }
 }
