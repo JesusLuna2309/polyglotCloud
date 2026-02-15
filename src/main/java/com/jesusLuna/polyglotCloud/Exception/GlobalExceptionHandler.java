@@ -107,6 +107,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(
+            RateLimitExceededException ex, WebRequest request) {
+        
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+        
+        Map<String, Object> errorDetails = new HashMap<>();
+        errorDetails.put("timestamp", Instant.now());
+        errorDetails.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
+        errorDetails.put("error", "Rate Limit Exceeded");
+        errorDetails.put("message", ex.getMessage());
+        errorDetails.put("limitType", ex.getLimitType().getDescription());
+        errorDetails.put("retryAfterSeconds", ex.getRetryAfter().getSeconds());
+        errorDetails.put("path", request.getDescription(false).replace("uri=", ""));
+        
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfter().getSeconds()))
+                .header("X-RateLimit-Type", ex.getLimitType().name())
+                .body(errorDetails);
+    }
+
     /**
      * Maneja todas las demás excepciones
      */
