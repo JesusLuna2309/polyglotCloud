@@ -13,7 +13,6 @@ import com.jesusLuna.polyglotCloud.models.Language;
 import com.jesusLuna.polyglotCloud.models.Snippet;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
-import com.jesusLuna.polyglotCloud.models.Translations.TranslationVersion;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
