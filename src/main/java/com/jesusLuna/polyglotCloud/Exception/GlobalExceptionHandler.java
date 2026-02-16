@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.exception;
+package com.jesusLuna.polyglotCloud.Exception;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import com.jesusLuna.polyglotCloud.dto.UserDTO;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO;
 
 import lombok.extern.slf4j.Slf4j;
 

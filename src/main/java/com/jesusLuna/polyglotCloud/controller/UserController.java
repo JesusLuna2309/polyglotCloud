@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.jesusLuna.polyglotCloud.dto.UserDTO;
-import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO;
+import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.mapper.UserMapper;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;

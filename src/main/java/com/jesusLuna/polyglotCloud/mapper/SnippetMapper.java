@@ -3,7 +3,7 @@ package com.jesusLuna.polyglotCloud.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.jesusLuna.polyglotCloud.dto.SnippetDTO;
+import com.jesusLuna.polyglotCloud.DTO.SnippetDTO;
 import com.jesusLuna.polyglotCloud.models.Snippet;
 
 @Mapper(componentModel = "spring")

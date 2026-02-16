@@ -7,14 +7,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.dto.UserDTO;
-import com.jesusLuna.polyglotCloud.dto.UserDTO.AuthResponseWithCookies;
-import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO.AuthResponseWithCookies;
+import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
-import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.Security.JwtTokenProvider;
+import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

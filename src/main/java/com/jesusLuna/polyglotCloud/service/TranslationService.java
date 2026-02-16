@@ -11,9 +11,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.dto.TranslationDTO;
-import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.DTO.TranslationDTO;
+import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
 import com.jesusLuna.polyglotCloud.models.Language;
 import com.jesusLuna.polyglotCloud.models.Snippet;

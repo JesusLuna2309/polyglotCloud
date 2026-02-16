@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.jesusLuna.polyglotCloud.dto.UserDTO;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO;
 import com.jesusLuna.polyglotCloud.service.AuthService;
 import com.jesusLuna.polyglotCloud.util.HttpRequestUtils;
 

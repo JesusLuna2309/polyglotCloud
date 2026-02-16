@@ -9,7 +9,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.jesusLuna.polyglotCloud.models.enums.Role;
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

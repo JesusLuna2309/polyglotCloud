@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.jesusLuna.polyglotCloud.dto.TranslationDTO;
+import com.jesusLuna.polyglotCloud.DTO.TranslationDTO;
 import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.Translations.Translation;
