@@ -13,7 +13,7 @@ public interface UserMapper {
      * Convierte User -> UserAdminResponse (Para panel de administración)
      * Incluye toda la información sensible
      */
-    UserDTO. UserAdminResponse toAdminResponse(User user);
+    UserDTO.UserAdminResponse toAdminResponse(User user);
 
     /**
      * Convierte User -> UserPublicResponse (Para vistas públicas)
