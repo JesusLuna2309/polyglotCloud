@@ -45,6 +45,22 @@ public class User {
 
         private static final int MAX_FAILED_ATTEMPTS_TEMP = 5;
         private static final int MAX_FAILED_ATTEMPTS_PERM = 10;
+
+        /**
+         * Calculates remaining login attempts before temporary lock (5 attempts)
+         */
+        @Transient
+        public int getRemainingAttemptsBeforeTempLock() {
+            return Math.max(0, MAX_FAILED_ATTEMPTS_TEMP - this.failedLoginAttempts);
+        }
+
+        /**
+         * Calculates remaining login attempts before permanent lock (10 attempts)
+         */
+        @Transient
+        public int getRemainingAttemptsBeforePermLock() {
+            return Math.max(0, MAX_FAILED_ATTEMPTS_PERM - this.failedLoginAttempts);
+        }
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

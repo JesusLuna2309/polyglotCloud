@@ -123,4 +123,15 @@ public class UserDTO {
                 String path,
                 Instant timestamp
         ) {}
+
+        public record LoginErrorResponse(
+                String message,
+                String detail,
+                String path,
+                Instant timestamp,
+                Integer remainingAttempts,
+                Instant lockedUntil,
+                Boolean accountLocked,
+                Boolean accountDisabled
+        ) {}
 }
