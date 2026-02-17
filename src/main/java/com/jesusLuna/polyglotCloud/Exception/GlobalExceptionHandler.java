@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -138,6 +139,25 @@ public class GlobalExceptionHandler {
         );
         
         log.warn("Forbidden access: {}", ex.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    /**
+     * Maneja excepciones de acceso denegado de Spring Security (@PreAuthorize)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<UserDTO.ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException ex, WebRequest request) {
+        
+        UserDTO.ErrorResponse error = new UserDTO.ErrorResponse(
+            "Access denied. You do not have permission to perform this action.",
+            "Access denied",
+            request.getDescription(false).replace("uri=", ""),
+            Instant.now()
+        );
+        
+        log.warn("Access denied: {}", ex.getMessage());
         
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
