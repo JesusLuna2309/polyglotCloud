@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
@@ -55,6 +56,9 @@ class UserServiceSecurityTest {
 
     @Mock
     private PostQuantumPasswordEncoder passwordEncoder;
+
+    @Mock
+    private SecurityProperties securityProperties;
 
     @InjectMocks
     private UserService userService;
@@ -100,6 +104,12 @@ class UserServiceSecurityTest {
                 .createdAt(Instant.now().minusSeconds(86400))
                 .updatedAt(Instant.now())
                 .build();
+        
+        // Setup default security properties for tests (lenient since not all tests use them)
+        lenient().when(securityProperties.getMaxFailedAttemptsTemp()).thenReturn(5);
+        lenient().when(securityProperties.getMaxFailedAttemptsPerm()).thenReturn(10);
+        lenient().when(securityProperties.getLockoutDurationMinutes()).thenReturn(30);
+        lenient().when(securityProperties.getLockoutDurationDays()).thenReturn(1);
     }
 
     @Test

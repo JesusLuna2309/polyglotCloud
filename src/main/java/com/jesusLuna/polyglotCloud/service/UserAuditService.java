@@ -7,21 +7,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.LoginAttempt;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.repository.LoginAttemptRepository;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserAuditService {
 
     private final UserRepository userRepository;
     private final LoginAttemptRepository loginAttemptRepository;
+    private final SecurityProperties securityProperties;
+
+    public UserAuditService(UserRepository userRepository, 
+                           LoginAttemptRepository loginAttemptRepository,
+                           SecurityProperties securityProperties) {
+        this.userRepository = userRepository;
+        this.loginAttemptRepository = loginAttemptRepository;
+        this.securityProperties = securityProperties;
+    }
 
     /**
      * Registra intento fallido en transacción separada e independiente
@@ -33,7 +41,12 @@ public class UserAuditService {
             User user = userRepository.findById(userId).orElse(null);
             
             if (user != null) {
-                user.recordFailedLogin();
+                user.recordFailedLogin(
+                    securityProperties.getMaxFailedAttemptsTemp(),
+                    securityProperties.getMaxFailedAttemptsPerm(),
+                    securityProperties.getLockoutDurationMinutes(),
+                    securityProperties.getLockoutDurationDays()
+                );
                 userRepository.saveAndFlush(user);
                 
                 log.info("Failed login attempt recorded for user: {} (attempts: {})",
@@ -81,29 +94,36 @@ public class UserAuditService {
             // Do NOT increment for "Account is locked" or "Account is disabled" - otherwise
             // trying while locked would push count to 10 and permanently block.
             // Pattern: 5 wrong passwords → 30 min lock → after unlock, 6th–9th wrong → 10th → 1 day + deactivate.
-            boolean shouldIncrementCounter = user != null && "Invalid password".equals(failureReason);
+            if (user == null) {
+                log.info("Failed login attempt recorded for unknown user - Reason: {}", failureReason);
+                return null;
+            }
             
-            if (user != null) {
-                if (shouldIncrementCounter) {
-                    user.recordFailedLogin();
-                    user = userRepository.saveAndFlush(user);
-                }
+            boolean shouldIncrementCounter = "Invalid password".equals(failureReason);
+            
+            if (shouldIncrementCounter) {
+                user.recordFailedLogin(
+                    securityProperties.getMaxFailedAttemptsTemp(),
+                    securityProperties.getMaxFailedAttemptsPerm(),
+                    securityProperties.getLockoutDurationMinutes(),
+                    securityProperties.getLockoutDurationDays()
+                );
+                user = userRepository.saveAndFlush(user);
                 
                 log.info("Failed login attempt recorded for user: {} (attempts: {}) - Reason: {}",
                         user.getUsername(), user.getFailedLoginAttempts(), failureReason);
 
-                if (shouldIncrementCounter) {
-                    if (!user.isAccountNonLocked()) {
-                        log.warn("User account locked: {} (attempts: {})", 
-                                user.getUsername(), user.getFailedLoginAttempts());
-                    }
-                    if (!user.isActive()) {
-                        log.warn("User account disabled: {} (attempts: {})", 
-                                user.getUsername(), user.getFailedLoginAttempts());
-                    }
+                if (!user.isAccountNonLocked()) {
+                    log.warn("User account locked: {} (attempts: {})", 
+                            user.getUsername(), user.getFailedLoginAttempts());
+                }
+                if (!user.isActive()) {
+                    log.warn("User account disabled: {} (attempts: {})", 
+                            user.getUsername(), user.getFailedLoginAttempts());
                 }
             } else {
-                log.info("Failed login attempt recorded for unknown user - Reason: {}", failureReason);
+                log.info("Failed login attempt recorded for user: {} (attempts: {}) - Reason: {}",
+                        user.getUsername(), user.getFailedLoginAttempts(), failureReason);
             }
             
             return user;

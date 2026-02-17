@@ -14,6 +14,7 @@ import com.jesusLuna.polyglotCloud.DTO.UserDTO;
 import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
@@ -30,6 +31,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PostQuantumPasswordEncoder passwordEncoder;
+    private final SecurityProperties securityProperties;
 
     @Transactional
     public User createUser(UserDTO.UserRegistrationRequest request, UUID creatorId) {
@@ -318,8 +320,9 @@ public class UserService {
         // Reactivate account if it was deactivated (likely due to too many failed attempts)
         // Note: We only reactivate if it was inactive, but we don't force reactivation
         // as the account might have been deactivated for other reasons
-        if (wasInactive && previousAttempts >= 10) {
-            // Only reactivate if it was likely deactivated due to failed attempts (10+)
+        // Use configurable threshold for permanent lockout
+        if (wasInactive && previousAttempts >= securityProperties.getMaxFailedAttemptsPerm()) {
+            // Only reactivate if it was likely deactivated due to failed attempts (reached permanent lockout threshold)
             user.setActive(true);
             log.info("Account reactivated for user {} by admin {} (was deactivated due to {} failed attempts)", 
                     userId, adminId, previousAttempts);

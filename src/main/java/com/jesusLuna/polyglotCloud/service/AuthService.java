@@ -12,6 +12,7 @@ import com.jesusLuna.polyglotCloud.DTO.UserDTO.AuthResponseWithCookies;
 import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.Exception.LoginFailedException;
 import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.Security.JwtTokenProvider;
@@ -31,6 +32,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final UserAuditService userAuditService;
+    private final SecurityProperties securityProperties;
 
     //TODO: Agregar readonly en @Transactional(readOnly = true) a los métodos que no modifiquen datos (en el service)
 
@@ -138,10 +140,12 @@ public class AuthService {
                 // Record failed attempt (this increments failedLoginAttempts and returns updated user)
                 User updatedUser = userAuditService.recordFailedLoginAttempt(userId, ipAddress, userAgent, "Invalid password");
                 
-                // Calculate remaining attempts before temporary lock (5 attempts)
+                // Calculate remaining attempts before temporary lock using configured threshold
                 // If user was updated, use updated user; otherwise use current user
                 User userForAttempts = updatedUser != null ? updatedUser : user;
-                int remainingAttempts = userForAttempts.getRemainingAttemptsBeforeTempLock();
+                int remainingAttempts = userForAttempts.getRemainingAttemptsBeforeTempLock(
+                    securityProperties.getMaxFailedAttemptsTemp()
+                );
                 
                 // Throw exception with remaining attempts
                 throw new LoginFailedException(

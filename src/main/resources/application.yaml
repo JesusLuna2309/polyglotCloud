@@ -79,6 +79,13 @@ app:
     verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:8080/auth/verify-email}
     support-email: ${EMAIL_SUPPORT:support@polyglotcloud.com}
 
+  # CONFIGURACIÓN DE SEGURIDAD
+  security:
+    max-failed-attempts-temp: ${SECURITY_MAX_FAILED_ATTEMPTS_TEMP:5}
+    max-failed-attempts-perm: ${SECURITY_MAX_FAILED_ATTEMPTS_PERM:10}
+    lockout-duration-minutes: ${SECURITY_LOCKOUT_DURATION_MINUTES:30}
+    lockout-duration-days: ${SECURITY_LOCKOUT_DURATION_DAYS:1}
+
 # ✅ LOGGING
 logging:
   level:

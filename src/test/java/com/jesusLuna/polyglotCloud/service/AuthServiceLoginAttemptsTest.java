@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.jesusLuna.polyglotCloud.DTO.UserDTO;
 import com.jesusLuna.polyglotCloud.Exception.LoginFailedException;
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
@@ -63,6 +64,9 @@ class AuthServiceLoginAttemptsTest {
     @Mock
     private UserAuditService userAuditService;
 
+    @Mock
+    private SecurityProperties securityProperties;
+
     @InjectMocks
     private AuthService authService;
 
@@ -91,6 +95,12 @@ class AuthServiceLoginAttemptsTest {
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
+        
+        // Setup default security properties for tests
+        lenient().when(securityProperties.getMaxFailedAttemptsTemp()).thenReturn(5);
+        lenient().when(securityProperties.getMaxFailedAttemptsPerm()).thenReturn(10);
+        lenient().when(securityProperties.getLockoutDurationMinutes()).thenReturn(30);
+        lenient().when(securityProperties.getLockoutDurationDays()).thenReturn(1);
     }
 
     @Test

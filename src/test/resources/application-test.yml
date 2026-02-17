@@ -35,6 +35,12 @@ app:
             expiration-s: 604800
             secure: false
             same-site: Lax
+    # Security Configuration for tests
+    security:
+        max-failed-attempts-temp: 5
+        max-failed-attempts-perm: 10
+        lockout-duration-minutes: 30
+        lockout-duration-days: 1
 
 mail:
     from: test@example.com

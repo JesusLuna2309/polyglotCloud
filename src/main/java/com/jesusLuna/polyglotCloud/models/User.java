@@ -43,23 +43,44 @@ import lombok.Setter;
 @AllArgsConstructor
 public class User {
 
-        private static final int MAX_FAILED_ATTEMPTS_TEMP = 5;
-        private static final int MAX_FAILED_ATTEMPTS_PERM = 10;
+        // Default values (kept for backward compatibility and as fallback)
+        private static final int DEFAULT_MAX_FAILED_ATTEMPTS_TEMP = 5;
+        private static final int DEFAULT_MAX_FAILED_ATTEMPTS_PERM = 10;
+        private static final int DEFAULT_LOCKOUT_DURATION_MINUTES = 30;
+        private static final int DEFAULT_LOCKOUT_DURATION_DAYS = 1;
 
         /**
-         * Calculates remaining login attempts before temporary lock (5 attempts)
+         * Calculates remaining login attempts before temporary lock
+         * Uses default value if maxAttemptsTemp is not provided
          */
         @Transient
         public int getRemainingAttemptsBeforeTempLock() {
-            return Math.max(0, MAX_FAILED_ATTEMPTS_TEMP - this.failedLoginAttempts);
+            return getRemainingAttemptsBeforeTempLock(DEFAULT_MAX_FAILED_ATTEMPTS_TEMP);
         }
 
         /**
-         * Calculates remaining login attempts before permanent lock (10 attempts)
+         * Calculates remaining login attempts before temporary lock with configurable threshold
+         */
+        @Transient
+        public int getRemainingAttemptsBeforeTempLock(int maxAttemptsTemp) {
+            return Math.max(0, maxAttemptsTemp - this.failedLoginAttempts);
+        }
+
+        /**
+         * Calculates remaining login attempts before permanent lock
+         * Uses default value if maxAttemptsPerm is not provided
          */
         @Transient
         public int getRemainingAttemptsBeforePermLock() {
-            return Math.max(0, MAX_FAILED_ATTEMPTS_PERM - this.failedLoginAttempts);
+            return getRemainingAttemptsBeforePermLock(DEFAULT_MAX_FAILED_ATTEMPTS_PERM);
+        }
+
+        /**
+         * Calculates remaining login attempts before permanent lock with configurable threshold
+         */
+        @Transient
+        public int getRemainingAttemptsBeforePermLock(int maxAttemptsPerm) {
+            return Math.max(0, maxAttemptsPerm - this.failedLoginAttempts);
         }
     
     @Id
@@ -156,13 +177,34 @@ public class User {
         return role.hasPermission(Role.ADMIN);
     }
 
+    /**
+     * Records a failed login attempt using default thresholds (for backward compatibility)
+     */
     public void recordFailedLogin() {
+        recordFailedLogin(
+            DEFAULT_MAX_FAILED_ATTEMPTS_TEMP,
+            DEFAULT_MAX_FAILED_ATTEMPTS_PERM,
+            DEFAULT_LOCKOUT_DURATION_MINUTES,
+            DEFAULT_LOCKOUT_DURATION_DAYS
+        );
+    }
+
+    /**
+     * Records a failed login attempt with configurable security thresholds
+     * 
+     * @param maxAttemptsTemp Maximum attempts before temporary lockout
+     * @param maxAttemptsPerm Maximum attempts before permanent lockout
+     * @param lockoutDurationMinutes Lockout duration in minutes for temporary lockout
+     * @param lockoutDurationDays Lockout duration in days for permanent lockout
+     */
+    public void recordFailedLogin(int maxAttemptsTemp, int maxAttemptsPerm, 
+                                   int lockoutDurationMinutes, int lockoutDurationDays) {
         this.failedLoginAttempts++;
-        if (this.failedLoginAttempts >= MAX_FAILED_ATTEMPTS_TEMP) {
-            this.lockedUntil = Instant.now().plus(30, ChronoUnit.MINUTES);
+        if (this.failedLoginAttempts >= maxAttemptsTemp) {
+            this.lockedUntil = Instant.now().plus(lockoutDurationMinutes, ChronoUnit.MINUTES);
         }
-        if (this.failedLoginAttempts >= MAX_FAILED_ATTEMPTS_PERM) {
-            this.lockedUntil = Instant.now().plus(1, ChronoUnit.DAYS);
+        if (this.failedLoginAttempts >= maxAttemptsPerm) {
+            this.lockedUntil = Instant.now().plus(lockoutDurationDays, ChronoUnit.DAYS);
             this.active = false;
         }
     }
