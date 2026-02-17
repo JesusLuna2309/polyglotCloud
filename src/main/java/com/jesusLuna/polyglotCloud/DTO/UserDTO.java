@@ -134,4 +134,21 @@ public class UserDTO {
                 Boolean accountLocked,
                 Boolean accountDisabled
         ) {}
+
+        /**
+         * Response DTO for security alerts endpoint
+         * Contains users with failed login attempts for admin monitoring
+         */
+        public record SecurityAlertResponse(
+                UUID id,
+                String username,
+                String email,
+                int failedLoginAttempts,
+                Instant lockedUntil,
+                Instant lastLoginAt,
+                String lastLoginIp,
+                boolean isLocked,
+                boolean isActive,
+                Instant createdAt
+        ) {}
 }
