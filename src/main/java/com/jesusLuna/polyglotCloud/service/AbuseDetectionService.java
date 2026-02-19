@@ -37,10 +37,10 @@ public class AbuseDetectionService {
             violations++;
             
             // Guardar con TTL de 24 horas
-            cacheService.save(violationKey, String.valueOf(violations), 
-                             trackingWindowHours, TimeUnit.HOURS);
+            cacheService.save(violationKey, String.valueOf(violations),
+                            trackingWindowHours, TimeUnit.HOURS);
             
-            log.warn("Abuse violation recorded - Identifier: {}, Type: {}, IP: {}, Total violations: {}", 
+            log.warn("Abuse violation recorded - Identifier: {}, Type: {}, IP: {}, Total violations: {}",
                     identifier, limitType, ipAddress, violations);
             
             // Verificar si necesitamos escalation
