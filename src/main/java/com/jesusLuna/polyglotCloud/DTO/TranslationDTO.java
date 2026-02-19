@@ -32,6 +32,8 @@ public class TranslationDTO {
                 Long processingTimeMs,
                 Integer currentVersionNumber,
                 Integer totalVersions,
+                Boolean isReused, // 🆕 Indica si fue reutilizada
+                String contentHash, // 🆕 Hash para debugging
                 Instant createdAt,
                 Instant updatedAt,
                 Instant completedAt

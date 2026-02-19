@@ -37,4 +37,19 @@ public interface TranslationRepository extends JpaRepository<Translation, UUID> 
 
     @Query("SELECT t FROM Translation t WHERE t.sourceSnippet.id = :snippetId ORDER BY t.createdAt DESC")
     List<Translation> findBySourceSnippetIdOrderByCreatedAtDesc(@Param("snippetId") UUID snippetId);
+
+    @Query("SELECT t FROM Translation t WHERE t.contentHash = :contentHash AND t.status = 'COMPLETED'")
+    Optional<Translation> findCompletedByContentHash(@Param("contentHash") String contentHash);
+
+    /**
+     * Encuentra todas las traducciones con el mismo hash (para detectar duplicados)
+     */
+    @Query("SELECT t FROM Translation t WHERE t.contentHash = :contentHash ORDER BY t.createdAt ASC")
+    List<Translation> findAllByContentHash(@Param("contentHash") String contentHash);
+
+    /**
+     * Verifica si existe una traducción completada con un hash específico
+     */
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Translation t WHERE t.contentHash = :contentHash AND t.status = 'COMPLETED'")
+    boolean existsCompletedByContentHash(@Param("contentHash") String contentHash);
 }

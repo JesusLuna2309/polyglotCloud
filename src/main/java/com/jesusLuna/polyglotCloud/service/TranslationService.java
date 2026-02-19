@@ -1,6 +1,7 @@
 package com.jesusLuna.polyglotCloud.service;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.cache.annotation.Cacheable;
@@ -43,6 +44,8 @@ public class TranslationService {
     private final CacheService cacheService;
     private final TranslationMapper translationMapper;
     private final UserRepository userRepository;
+        private final TranslationDeduplicationService deduplicationService;
+
 
     @Transactional
     public Translation requestTranslation(TranslationDTO.TranslationRequest request, User requestedBy) {
@@ -56,7 +59,26 @@ public class TranslationService {
         Language targetLanguage = languageRepository.findByNameIgnoreCase(request.targetLanguage())
                 .orElseThrow(() -> new ResourceNotFoundException("Language", "name", request.targetLanguage()));
 
-        // Crear traducción
+        // 🔍 VERIFICAR SI EXISTE TRADUCCIÓN DUPLICADA
+        Optional<Translation> existingTranslation = deduplicationService.findExistingTranslation(
+            sourceSnippet.getLanguage().getId(),
+            targetLanguage.getId(), 
+            sourceSnippet.getContent()
+        );
+
+        if (existingTranslation.isPresent()) {
+            log.info("Found existing translation, reusing for user: {}", requestedBy.getId());
+            return deduplicationService.reuseTranslation(existingTranslation.get(), requestedBy.getId());
+        }
+
+        // Generar hash para nueva traducción
+        String contentHash = deduplicationService.generateContentHash(
+            sourceSnippet.getLanguage().getId(),
+            targetLanguage.getId(),
+            sourceSnippet.getContent()
+        );
+
+        // Crear nueva traducción
         Translation translation = Translation.builder()
                 .sourceSnippet(sourceSnippet)
                 .sourceLanguage(sourceSnippet.getLanguage())
@@ -64,12 +86,13 @@ public class TranslationService {
                 .requestedBy(requestedBy)
                 .sourceCode(sourceSnippet.getContent())
                 .status(TranslationStatus.PENDING)
+                .contentHash(contentHash)
                 .currentVersionNumber(1)
                 .build();
 
         Translation saved = translationRepository.save(translation);
 
-        // Procesar asíncronamente
+        // Procesar asíncronamente solo si es nueva
         processTranslationAsync(saved.getId());
 
         return saved;
@@ -177,6 +200,7 @@ public class TranslationService {
 
         versionRepository.save(initialVersion);
     }
+        
 
     private String performTranslation(String sourceCode, String fromLanguage, String toLanguage) {
         log.debug("Translating from {} to {}", fromLanguage, toLanguage);
@@ -221,7 +245,7 @@ public class TranslationService {
         return translationMapper.toResponse(translationRepository.save(translation));
     }
 
-    @Transactional 
+    @Transactional
     @PreAuthorize("hasRole('MODERATOR')")
     public TranslationDTO.TranslationResponse rejectTranslation(UUID translationId, UUID reviewerId, String notes) {
         Translation translation = getTranslationById(translationId);
