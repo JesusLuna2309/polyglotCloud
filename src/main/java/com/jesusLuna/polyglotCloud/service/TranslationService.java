@@ -44,7 +44,7 @@ public class TranslationService {
     private final CacheService cacheService;
     private final TranslationMapper translationMapper;
     private final UserRepository userRepository;
-        private final TranslationDeduplicationService deduplicationService;
+    private final TranslationDeduplicationService deduplicationService;
 
 
     @Transactional
