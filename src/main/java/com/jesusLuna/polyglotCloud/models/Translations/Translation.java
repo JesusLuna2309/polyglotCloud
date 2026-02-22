@@ -119,6 +119,9 @@ public class Translation {
     @Builder.Default
     private Integer currentVersionNumber = 1;
 
+    @Column(name = "content_hash", length = 64, nullable = false)
+    private String contentHash;
+
         public void changeStatus(TranslationStatus newStatus, User reviewer, String notes) {
         if (!this.status.canTransitionTo(newStatus)) {
             throw new IllegalStateException(
