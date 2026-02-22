@@ -76,4 +76,25 @@ public class RefreshToken {
     public void revoke() {
         this.revoked = true;
     }
+
+    /**
+     * Genera la key de Redis para este token
+     */
+    public String getRedisKey() {
+        return "REFRESH_TOKEN:" + this.token;
+    }
+
+    /**
+     * Genera la key de Redis para tokens de un usuario
+     */
+    public static String getUserTokensPattern(UUID userId) {
+        return "USER_TOKENS:" + userId + ":*";
+    }
+
+    /**
+     * Genera la key de Redis para mapear usuario -> tokens
+     */
+    public String getUserMappingKey() {
+        return "USER_TOKENS:" + this.userId + ":" + this.id;
+    }
 }

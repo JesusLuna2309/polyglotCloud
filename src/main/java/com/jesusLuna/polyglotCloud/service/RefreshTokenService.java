@@ -8,11 +8,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
 import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.RefreshToken;
-import com.jesusLuna.polyglotCloud.repository.Specification.RefreshTokenRepository;
+import com.jesusLuna.polyglotCloud.repository.Specification.RefreshTokenRedisRepository;
+import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RefreshTokenService {
 
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRedisRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${app.refresh-token.max-per-user:5}")
@@ -138,15 +138,17 @@ public class RefreshTokenService {
         log.info("Revoked {} oldest tokens for user: {}", activeTokens.size() - keepCount, userId);
     }
 
-    @Scheduled(cron = "0 0 2 * * *")
-    @Transactional
+    /**
+     * Limpieza automática de tokens expirados
+     * Nota: Redis TTL se encarga automáticamente, pero mantenemos para casos especiales
+     */
+    @Scheduled(cron = "0 0 2 * * *") // Ejecuta a las 2 AM diariamente
     public void cleanupExpiredTokens() {
-        log.info("Starting cleanup of expired and revoked refresh tokens");
+        log.info("Starting manual cleanup of expired refresh tokens in Redis");
 
-        int expiredCount = refreshTokenRepository.deleteExpiredTokens(Instant.now());
-        int revokedCount = refreshTokenRepository.deleteRevokedTokens();
+        int cleanedCount = refreshTokenRepository.cleanupExpiredTokens();
 
-        log.info("Cleanup completed: {} expired tokens, {} revoked tokens deleted", expiredCount, revokedCount);
+        log.info("Manual cleanup completed: {} expired tokens removed from Redis", cleanedCount);
     }
     
 }

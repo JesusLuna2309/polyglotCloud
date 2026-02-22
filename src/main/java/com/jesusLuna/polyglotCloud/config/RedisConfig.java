@@ -14,6 +14,9 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 @Configuration
 @EnableCaching
 public class RedisConfig {
@@ -52,5 +55,29 @@ public class RedisConfig {
                 .cacheDefaults(config)
                 .transactionAware()
                 .build();
+    }
+    @Bean("refreshTokenRedisTemplate")
+    public RedisTemplate<String, Object> refreshTokenRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        
+        // Configurar ObjectMapper para manejar tipos de fecha correctamente
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.findAndRegisterModules();
+        
+        // Usar StringRedisSerializer para las claves
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        
+        // Usar JSON personalizado para los valores
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
+        
+        template.setDefaultSerializer(serializer);
+        template.afterPropertiesSet();
+        
+        return template;
     }
 }

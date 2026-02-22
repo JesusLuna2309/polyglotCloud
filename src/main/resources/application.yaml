@@ -72,6 +72,9 @@ app:
       expiration-s: ${JWT_COOKIE_EXPIRATION:604800}  # 7 días
       secure: ${JWT_COOKIE_SECURE:false}  # true en producción
       same-site: ${JWT_COOKIE_SAME_SITE:Lax}
+    refresh-token:
+      max-per-user: ${REFRESH_TOKEN_MAX_PER_USER:5}
+      cleanup-interval-hours: ${REFRESH_TOKEN_CLEANUP_INTERVAL:24}
 
   # CONFIGURACIÓN DE EMAIL
   email:
