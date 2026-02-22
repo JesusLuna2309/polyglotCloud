@@ -38,7 +38,13 @@ public interface TranslationRepository extends JpaRepository<Translation, UUID> 
     @Query("SELECT t FROM Translation t WHERE t.sourceSnippet.id = :snippetId ORDER BY t.createdAt DESC")
     List<Translation> findBySourceSnippetIdOrderByCreatedAtDesc(@Param("snippetId") UUID snippetId);
 
-    @Query("SELECT t FROM Translation t WHERE t.contentHash = :contentHash AND t.status = 'COMPLETED'")
+    @Query("SELECT t FROM Translation t " +
+           "WHERE t.contentHash = :contentHash " +
+           "AND t.status = 'COMPLETED' " +
+           "AND t.createdAt = (" +
+               "SELECT MAX(t2.createdAt) FROM Translation t2 " +
+               "WHERE t2.contentHash = :contentHash AND t2.status = 'COMPLETED'" +
+           ")")
     Optional<Translation> findCompletedByContentHash(@Param("contentHash") String contentHash);
 
     /**
