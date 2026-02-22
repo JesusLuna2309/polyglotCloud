@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.jesusLuna.polyglotCloud.dto.SnippetDTO;
-import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.DTO.SnippetDTO;
+import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.mapper.SnippetMapper;
 import com.jesusLuna.polyglotCloud.models.CustomUserPrincipal;
 import com.jesusLuna.polyglotCloud.models.Snippet;

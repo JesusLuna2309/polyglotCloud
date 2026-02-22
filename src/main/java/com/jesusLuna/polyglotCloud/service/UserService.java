@@ -10,14 +10,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.dto.UserDTO;
-import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO;
+import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PostQuantumPasswordEncoder passwordEncoder;
+    private final SecurityProperties securityProperties;
 
     @Transactional
     public User createUser(UserDTO.UserRegistrationRequest request, UUID creatorId) {
@@ -274,5 +276,61 @@ public class UserService {
 
     public boolean isEmailAvailable(String email) {
         return !userRepository.existsByEmailAndDeletedAtIsNull(email);
+    }
+
+    /**
+     * Get users with failed login attempts for security monitoring
+     * Returns paginated list of users who have failed login attempts
+     */
+    public Page<User> getUsersWithFailedLoginAttempts(Pageable pageable) {
+        log.debug("Fetching users with failed login attempts");
+        return userRepository.findUsersWithFailedLoginAttempts(pageable);
+    }
+
+    /**
+     * Reset failed login attempts counter for a user
+     * Admin action to unlock account and clear failed attempts
+     */
+    @CacheEvict(value = "users", key = "#userId")
+    @Transactional
+    public User resetFailedLoginAttempts(UUID userId, UUID adminId) {
+        log.debug("Resetting failed login attempts for user {} by admin {}", userId, adminId);
+
+        User admin = getUserById(adminId);
+        if (!admin.canAdministrate()) {
+            throw new ForbiddenAccessException("Only administrators can reset failed login attempts");
+        }
+
+        User user = getUserById(userId);
+        
+        // Store previous values for logging
+        int previousAttempts = user.getFailedLoginAttempts();
+        boolean wasLocked = user.getLockedUntil() != null;
+        boolean wasInactive = !user.isActive();
+        
+        // Reset failed login attempts counter
+        user.setFailedLoginAttempts(0);
+        
+        // Clear lock if account is locked
+        if (wasLocked) {
+            user.setLockedUntil(null);
+            log.info("Account unlocked for user {} by admin {}", userId, adminId);
+        }
+        
+        // Reactivate account if it was deactivated (likely due to too many failed attempts)
+        // Note: We only reactivate if it was inactive, but we don't force reactivation
+        // as the account might have been deactivated for other reasons
+        // Use configurable threshold for permanent lockout
+        if (wasInactive && previousAttempts >= securityProperties.getMaxFailedAttemptsPerm()) {
+            // Only reactivate if it was likely deactivated due to failed attempts (reached permanent lockout threshold)
+            user.setActive(true);
+            log.info("Account reactivated for user {} by admin {} (was deactivated due to {} failed attempts)", 
+                    userId, adminId, previousAttempts);
+        }
+
+        User updated = userRepository.save(user);
+        log.info("Failed login attempts reset for user {} by admin {} (previous attempts: {}, was locked: {}, was inactive: {})", 
+                userId, adminId, previousAttempts, wasLocked, wasInactive);
+        return updated;
     }
 }

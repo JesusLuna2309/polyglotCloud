@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.dto;
+package com.jesusLuna.polyglotCloud.DTO;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -122,5 +122,33 @@ public class UserDTO {
                 String detail,
                 String path,
                 Instant timestamp
+        ) {}
+
+        public record LoginErrorResponse(
+                String message,
+                String detail,
+                String path,
+                Instant timestamp,
+                Integer remainingAttempts,
+                Instant lockedUntil,
+                Boolean accountLocked,
+                Boolean accountDisabled
+        ) {}
+
+        /**
+         * Response DTO for security alerts endpoint
+         * Contains users with failed login attempts for admin monitoring
+         */
+        public record SecurityAlertResponse(
+                UUID id,
+                String username,
+                String email,
+                int failedLoginAttempts,
+                Instant lockedUntil,
+                Instant lastLoginAt,
+                String lastLoginIp,
+                boolean isLocked,
+                boolean isActive,
+                Instant createdAt
         ) {}
 }

@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.security;
+package com.jesusLuna.polyglotCloud.Security;
 
 import java.util.UUID;
 

@@ -7,14 +7,16 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.dto.UserDTO;
-import com.jesusLuna.polyglotCloud.dto.UserDTO.AuthResponseWithCookies;
-import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO;
+import com.jesusLuna.polyglotCloud.DTO.UserDTO.AuthResponseWithCookies;
+import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.Exception.LoginFailedException;
+import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
-import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.Security.JwtTokenProvider;
+import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
     private final UserAuditService userAuditService;
+    private final SecurityProperties securityProperties;
 
     //TODO: Agregar readonly en @Transactional(readOnly = true) a los métodos que no modifiquen datos (en el service)
 
@@ -82,39 +85,100 @@ public class AuthService {
         public UserDTO.AuthResponseWithCookies login(UserDTO.UserLoginRequest request, String ipAddress, String userAgent) {
         String login = request.login();
         String password = request.password();
+        User user = null;
+        UUID userId = null;
         
         log.info("Login attempt for: {}", login);
         
-        // Find user by username or email
-        User user = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(request.login(), request.login())
-                .orElseThrow(() -> new BusinessRuleException("Invalid credentials"));
-        
-        // Verificar si la cuenta está activa
-        if (!user.isActive()) {
-            throw new BusinessRuleException("Account is disabled");
-        }
-        
-        // Verificar si la cuenta está bloqueada
-        if (!user.isAccountNonLocked()) {
-            throw new BusinessRuleException("Account is locked. Please try again later.");
-        }
-        
         try {
+            // Find user by username or email
+            user = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(request.login(), request.login())
+                    .orElse(null);
+            
+            // Handle case when user is not found
+            if (user == null) {
+                userAuditService.recordFailedLoginAttempt(null, ipAddress, userAgent, "User not found");
+                throw new BusinessRuleException("Invalid credentials");
+            }
+            
+            userId = user.getId();
+            
+            // Verificar si la cuenta está activa
+            if (!user.isActive()) {
+                userAuditService.recordFailedLoginAttempt(userId, ipAddress, userAgent, "Account is disabled");
+                throw new BusinessRuleException("Account is disabled");
+            }
+            
+            // Verificar si la cuenta está bloqueada
+            if (!user.isAccountNonLocked()) {
+                userAuditService.recordFailedLoginAttempt(userId, ipAddress, userAgent, "Account is locked");
+                
+                // Calculate minutes remaining until unlock
+                long minutesRemaining = 0;
+                if (user.getLockedUntil() != null) {
+                    minutesRemaining = java.time.Duration.between(Instant.now(), user.getLockedUntil()).toMinutes();
+                    if (minutesRemaining < 0) {
+                        minutesRemaining = 0;
+                    }
+                }
+                
+                String message = minutesRemaining > 0 
+                    ? String.format("Account temporarily blocked. Try again in %d minute(s).", minutesRemaining)
+                    : "Account is locked. Please try again later.";
+                
+                throw new LoginFailedException(
+                    message,
+                    null, // No remaining attempts when already locked
+                    user.getLockedUntil(),
+                    true, // accountLocked
+                    !user.isActive() // accountDisabled
+                );
+            }
+            
             // Verificar contraseña manualmente (más control)
             if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-                throw new BadCredentialsException("Invalid credentials");
+                // Record failed attempt (this increments failedLoginAttempts and returns updated user)
+                User updatedUser = userAuditService.recordFailedLoginAttempt(userId, ipAddress, userAgent, "Invalid password");
+                
+                // Calculate remaining attempts before temporary lock using configured threshold
+                // If user was updated, use updated user; otherwise use current user
+                User userForAttempts = updatedUser != null ? updatedUser : user;
+                int remainingAttempts = userForAttempts.getRemainingAttemptsBeforeTempLock(
+                    securityProperties.getMaxFailedAttemptsTemp()
+                );
+                
+                // Throw exception with remaining attempts
+                throw new LoginFailedException(
+                    "Invalid credentials",
+                    remainingAttempts,
+                    userForAttempts.getLockedUntil(),
+                    !userForAttempts.isAccountNonLocked(),
+                    !userForAttempts.isActive()
+                );
             }
             
             log.debug("Authentication successful for: {}", login);
             
             // Check if email is verified
             if (!user.isEmailVerified()) {
-                throw new BusinessRuleException("Email not verified. Please verify your email before logging in.");
+                // Email verification failure doesn't count as a login attempt for lockout purposes
+                // But we still record it for audit purposes
+                userAuditService.recordFailedLoginAttempt(userId, ipAddress, userAgent, "Email not verified");
+                throw new LoginFailedException(
+                    "Email not verified. Please verify your email before logging in.",
+                    null, // No remaining attempts info for email verification failures
+                    null,
+                    false,
+                    false
+                );
             }
             
             // Record successful login
             user.recordSuccessfulLogin(ipAddress);
             userRepository.save(user);
+            
+            // Record successful login attempt in audit table
+            userAuditService.recordSuccessfulLoginAttempt(userId, ipAddress, userAgent);
             
             // Generate JWT token
             String token = jwtTokenProvider.generateToken(
@@ -145,11 +209,21 @@ public class AuthService {
                     refreshTokenEntity.getExpiresAt()
             );
             
+        } catch (LoginFailedException ex) {
+            // LoginFailedException is already handled above with proper audit logging and remaining attempts
+            throw ex;
+        } catch (BadCredentialsException | BusinessRuleException ex) {
+            // These exceptions are already handled above with proper audit logging
+            // All failed login attempts for existing users are recorded before throwing these exceptions
+            throw ex;
         } catch (Exception ex) {
             log.warn("Login failed for: {} - {}", login, ex.getMessage());
             
             // ✅ USAR EL SERVICIO SEPARADO - TRANSACCIÓN INDEPENDIENTE
-            userAuditService.recordFailedLoginAttempt(user.getId());
+            // Record failed attempt for any unexpected exception
+            // If user exists, use userId; otherwise use null
+            String failureReason = "Unexpected error: " + (ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
+            userAuditService.recordFailedLoginAttempt(userId, ipAddress, userAgent, failureReason);
             
             throw ex; // Re-throw para que el controlador maneje la respuesta
         }

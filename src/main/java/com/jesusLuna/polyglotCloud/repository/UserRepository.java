@@ -91,4 +91,11 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     long countByEmailVerifiedAndDeletedAtIsNull(boolean emailVerified);
 
+    /**
+     * Find users with failed login attempts (for security alerts)
+     * Returns users where failed_login_attempts > 0 and not deleted
+     */
+    @Query("SELECT u FROM User u WHERE u.failedLoginAttempts > 0 AND u.deletedAt IS NULL ORDER BY u.failedLoginAttempts DESC, u.lastLoginAt DESC NULLS LAST")
+    Page<User> findUsersWithFailedLoginAttempts(Pageable pageable);
+
 }
