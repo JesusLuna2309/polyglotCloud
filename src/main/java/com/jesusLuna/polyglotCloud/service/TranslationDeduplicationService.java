@@ -127,6 +127,7 @@ public class TranslationDeduplicationService {
                 .translationNotes("Reused from existing translation ID: " + existingTranslation.getId())
                 .contentHash(existingTranslation.getContentHash())
                 .currentVersionNumber(1)
+                .requestedBy(existingTranslation.getRequestedBy())
                 .build();
         
         // Establecer timestamps
