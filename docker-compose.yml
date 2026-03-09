@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: polyglot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    
+  # Opcional: Redis Insight para monitorear
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    environment:
+      - RIPORT=8001
+
+volumes:
+  redis_data:

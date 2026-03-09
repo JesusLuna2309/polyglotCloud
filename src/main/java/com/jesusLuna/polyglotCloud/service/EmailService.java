@@ -45,7 +45,7 @@ public class EmailService {
             context.setVariable("supportEmail", supportEmail);
             
             // Procesar template HTML
-            String htmlContent = templateEngine.process("email", context);
+            String htmlContent = templateEngine.process("emails/verification", context);
             
             // Crear y enviar email
             MimeMessage message = mailSender.createMimeMessage();
@@ -77,7 +77,7 @@ public class EmailService {
             context.setVariable("username", username);
             context.setVariable("supportEmail", supportEmail);
             
-            String htmlContent = templateEngine.process("email/welcome", context);
+            String htmlContent = templateEngine.process("emails/welcome", context);
             
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

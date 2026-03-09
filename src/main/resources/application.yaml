@@ -33,12 +33,12 @@ spring:
   # ✅ REDIS (opcional)
   data:
     redis:
-      host: ${REDIS_HOST:your-redis-instance.cloud}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
+      password: ${REDIS_PASSWORD:}
       ssl:
-        enabled: true
-      timeout: 60000ms
+        enabled: false
+      timeout: 5000ms
       lettuce:
         pool:
           max-active: 20

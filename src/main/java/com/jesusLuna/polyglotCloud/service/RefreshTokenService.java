@@ -47,6 +47,7 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(tokenString)
                 .userId(userId)
+                .id(new UUID(0, tokenString.hashCode()))
                 .expiresAt(expiresAt)
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)

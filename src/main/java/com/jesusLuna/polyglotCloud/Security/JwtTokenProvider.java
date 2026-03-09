@@ -1,7 +1,9 @@
 package com.jesusLuna.polyglotCloud.security;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
@@ -61,19 +63,16 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    //TODO: Hacer que el refresh token se genere en base 64
     public String generateRefreshToken(UUID userId) {
-        Instant now = Instant.now();
-        Instant expiryDate = now.plusMillis(refreshExpirationMs);
 
-        return Jwts.builder()
-                .subject(userId.toString())
-                .claim("userId", userId.toString())
-                .claim("type", "refresh")
-                .issuer(issuer)
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(expiryDate))
-                .signWith(secretKey)
-                .compact();
+        byte[] randomBytes = new byte[32];
+        new SecureRandom().nextBytes(randomBytes);
+    
+        // 2. Lo codificamos a Base64 para que sea un String manejable en HTTP
+        String refreshToken = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+
+        return refreshToken;
     }
 
     public long getRefreshExpirationMs() {

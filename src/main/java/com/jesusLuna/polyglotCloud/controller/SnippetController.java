@@ -58,7 +58,7 @@ public class SnippetController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping
     @Operation(
-        summary = "Listar snippets", 
+        summary = "Listar snippets",
         description = "Obtiene una lista paginada. Si no hay filtros, devuelve los del usuario actual.",
         parameters = {
             @Parameter(
