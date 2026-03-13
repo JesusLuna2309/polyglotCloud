@@ -33,12 +33,12 @@ spring:
   # ✅ REDIS (opcional)
   data:
     redis:
-      host: ${REDIS_HOST:your-redis-instance.cloud}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
+      password: ${REDIS_PASSWORD:}
       ssl:
-        enabled: true
-      timeout: 60000ms
+        enabled: false
+      timeout: 5000ms
       lettuce:
         pool:
           max-active: 20
@@ -72,6 +72,9 @@ app:
       expiration-s: ${JWT_COOKIE_EXPIRATION:604800}  # 7 días
       secure: ${JWT_COOKIE_SECURE:false}  # true en producción
       same-site: ${JWT_COOKIE_SAME_SITE:Lax}
+    refresh-token:
+      max-per-user: ${REFRESH_TOKEN_MAX_PER_USER:5}
+      cleanup-interval-hours: ${REFRESH_TOKEN_CLEANUP_INTERVAL:24}
 
   # CONFIGURACIÓN DE EMAIL
   email:
