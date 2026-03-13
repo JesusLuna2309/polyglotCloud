@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.jesusLuna.polyglotCloud.models.RefreshToken;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,62 +22,64 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class RefreshTokenRedisRepository {
+    
+    
+    private final PostQuantumPasswordEncoder encoder; // inyecta tu encoder
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final TokenSecurityService tokenSecurityService;
     
     private static final String TOKEN_PREFIX = "REFRESH_TOKEN:";
     private static final String USER_TOKENS_PREFIX = "USER_TOKENS:";
 
-    /**
-     * Guarda un refresh token en Redis con TTL automático
-     */
+
     public RefreshToken save(RefreshToken token) {
-        try {
-            String tokenKey = TOKEN_PREFIX + token.getToken();
-            String userMappingKey = token.getUserMappingKey();
-            
-            // Calcular TTL basado en expiración
-            long ttlSeconds = Duration.between(Instant.now(), token.getExpiresAt()).getSeconds();
-            
-            if (ttlSeconds <= 0) {
-                log.warn("Attempting to save expired token: {}", token.getId());
-                return token;
-            }
-            
-            // Guardar token principal
-            redisTemplate.opsForValue().set(tokenKey, token, ttlSeconds, TimeUnit.SECONDS);
-            
-            // Guardar mapeo usuario -> token para consultas por usuario
-            redisTemplate.opsForValue().set(userMappingKey, token.getId().toString(), ttlSeconds, TimeUnit.SECONDS);
-            
-            log.debug("Saved refresh token to Redis: {} (TTL: {} seconds)", token.getId(), ttlSeconds);
-            return token;
-            
-        } catch (Exception e) {
-            log.error("Error saving refresh token to Redis: {}", token.getId(), e);
-            throw new RuntimeException("Failed to save refresh token", e);
-        }
+    // Generar un token seguro (aleatorio) para el usuario
+    String rawToken = tokenSecurityService.generateSecureToken("refresh");
+    
+    // Derivar la clave determinista para Redis usando HMAC
+    String redisKey = TOKEN_PREFIX + tokenSecurityService.deriveRedisKey(rawToken);
+
+    long ttlSeconds = Duration.between(Instant.now(), token.getExpiresAt()).getSeconds();
+
+    // Guardar el refresh token en Redis con TTL
+    redisTemplate.opsForValue().set(redisKey, token, ttlSeconds, TimeUnit.SECONDS);
+
+    // Guardar índice por usuario (puede seguir usando rawToken)
+    String userIndexKey = USER_TOKENS_PREFIX + token.getUserId();
+    redisTemplate.opsForSet().add(userIndexKey, redisKey);
+    
+    // Establecer TTL para el índice si no existía
+    if (Boolean.FALSE.equals(redisTemplate.hasKey(userIndexKey))) {
+        redisTemplate.expire(userIndexKey, ttlSeconds, TimeUnit.SECONDS);
     }
+
+    // Retornar el token con el valor aleatorio que el cliente usará
+    token.setToken(rawToken); // actualizar el token para que se devuelva al cliente
+    return token;
+}
 
     /**
      * Busca un refresh token por su valor
      */
-    public Optional<RefreshToken> findByToken(String tokenString) {
-        try {
-            String key = TOKEN_PREFIX + tokenString;
-            RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(key);
-            
-            if (token != null) {
-                log.debug("Found refresh token in Redis: {}", token.getId());
-            }
-            
-            return Optional.ofNullable(token);
-            
-        } catch (Exception e) {
-            log.error("Error finding refresh token in Redis: {}", tokenString, e);
-            return Optional.empty();
+    public RefreshToken findByToken(String tokenString) {
+    try {
+        // Derivar la clave determinista para Redis usando HMAC
+        String redisKey = TOKEN_PREFIX + tokenSecurityService.deriveRedisKey(tokenString);
+
+        RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(redisKey);
+
+        if (token != null) {
+            log.debug("Found refresh token in Redis: {}", token.getId());
         }
+
+        return token;
+
+    } catch (Exception e) {
+        log.error("Error finding refresh token in Redis: {}", tokenString, e);
+        return null;
     }
+}
 
     /**
      * Obtiene todos los tokens activos de un usuario
@@ -85,18 +88,16 @@ public class RefreshTokenRedisRepository {
         try {
             String indexKey = USER_TOKENS_PREFIX + userId;
 
-            Set<Object> tokenIds = redisTemplate.opsForSet().members(indexKey);
+            Set<Object> redisKeys  = redisTemplate.opsForSet().members(indexKey);
             
-            if (tokenIds == null || tokenIds.isEmpty()) {
+            if (redisKeys == null || redisKeys.isEmpty()) {
                 return List.of();
             }
             
-            List<RefreshToken> tokens = tokenIds.stream()
-                    .map(id -> findById(id.toString()))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .filter(token -> !token.isRevoked() && !token.isExpired())
-                    .collect(Collectors.toList());
+            List<RefreshToken> tokens = redisKeys .stream()
+                .map(id -> (RefreshToken) redisTemplate.opsForValue().get(id.toString()))
+                .filter(token -> token != null && !token.isRevoked() && !token.isExpired())
+                .collect(Collectors.toList());
 
             log.debug("Found {} active refresh tokens for user: {}", tokens.size(), userId);
             return tokens;
@@ -108,42 +109,18 @@ public class RefreshTokenRedisRepository {
     }
 
     /**
-     * Busca token por ID (usado internamente)
-     */
-    private Optional<RefreshToken> findById(String tokenId) {
-        try {
-            // Necesitamos buscar por patrón ya que no tenemos mapeo directo ID -> token string
-            Set<String> tokenKeys = redisTemplate.keys(TOKEN_PREFIX + "*");
-            
-            if (tokenKeys != null) {
-                for (String key : tokenKeys) {
-                    RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(key);
-                    if (token != null && tokenId.equals(token.getId().toString())) {
-                        return Optional.of(token);
-                    }
-                }
-            }
-            
-            return Optional.empty();
-            
-        } catch (Exception e) {
-            log.error("Error finding token by ID: {}", tokenId, e);
-            return Optional.empty();
-        }
-    }
-
-    /**
      * Revoca un token específico
      */
     public void revokeToken(String tokenString) {
         try {
-            String key = TOKEN_PREFIX + tokenString;
-            RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(key);
+            // Derivar la clave determinista para Redis usando HMAC
+            String redisKey = TOKEN_PREFIX + tokenSecurityService.deriveRedisKey(tokenString);
+            RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(redisKey);
             
             if (token != null) {
                 token.revoke();
                 // Guardar token revocado con TTL corto (para auditoría temporal)
-                redisTemplate.opsForValue().set(key, token, 300, TimeUnit.SECONDS); // 5 minutos
+                redisTemplate.opsForValue().set(redisKey, token, 300, TimeUnit.SECONDS); // 5 minutos
                 
                 log.info("Revoked refresh token: {}", token.getId());
             }
@@ -158,14 +135,26 @@ public class RefreshTokenRedisRepository {
      */
     public int revokeAllByUserId(UUID userId) {
         try {
-            List<RefreshToken> userTokens = findActiveByUserId(userId);
+            String indexKey = USER_TOKENS_PREFIX + userId;
             
-            for (RefreshToken token : userTokens) {
-                revokeToken(token.getToken());
+            Set<Object> redisKeys = redisTemplate.opsForSet().members(indexKey);
+            
+            if (redisKeys == null || redisKeys.isEmpty()) {
+                return 0;
             }
-            
-            log.info("Revoked {} tokens for user: {}", userTokens.size(), userId);
-            return userTokens.size();
+
+            int count = 0;
+            for (Object key : redisKeys) {
+                RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(key.toString());
+                if (token != null) {
+                    token.revoke();
+                    redisTemplate.opsForValue().set(key.toString(), token, 300, TimeUnit.SECONDS);
+                    count++;
+                }
+            }
+
+            log.info("Revoked {} tokens for user: {}", count, userId);
+            return count;
             
         } catch (Exception e) {
             log.error("Error revoking all tokens for user: {}", userId, e);
@@ -178,20 +167,21 @@ public class RefreshTokenRedisRepository {
      */
     public void delete(String tokenString) {
         try {
-            Optional<RefreshToken> tokenOpt = findByToken(tokenString);
-            
-            if (tokenOpt.isPresent()) {
-                RefreshToken token = tokenOpt.get();
-                
-                // Eliminar token principal
-                redisTemplate.delete(TOKEN_PREFIX + tokenString);
-                
-                // Eliminar mapeo de usuario
-                redisTemplate.delete(token.getUserMappingKey());
-                
-                log.debug("Deleted refresh token from Redis: {}", token.getId());
+            String redisKey = TOKEN_PREFIX + tokenSecurityService.deriveRedisKey(tokenString);
+            RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(redisKey);
+
+            if (token == null) {
+                log.warn("Attempted to delete non-existent token: {}", tokenString);
+                return;
             }
-            
+
+            redisTemplate.delete(redisKey);
+
+            String userIndexKey = USER_TOKENS_PREFIX + token.getUserId();
+            redisTemplate.opsForSet().remove(userIndexKey, redisKey);
+
+            log.info("Deleted refresh token: {}", token.getId());
+
         } catch (Exception e) {
             log.error("Error deleting token: {}", tokenString, e);
         }
@@ -201,43 +191,15 @@ public class RefreshTokenRedisRepository {
      * Cuenta tokens activos de un usuario
      */
     public long countActiveTokensByUserId(UUID userId, Instant now) {
-        return findActiveByUserId(userId).size();
+        String indexKey = USER_TOKENS_PREFIX + userId;
+        return redisTemplate.opsForSet().size(indexKey);
     }
 
     /**
      * Verifica si un token es válido (existe y no está revocado/expirado)
      */
     public boolean isTokenValid(String tokenString) {
-        return findByToken(tokenString)
-                .map(RefreshToken::isValid)
-                .orElse(false);
-    }
-
-    /**
-     * Limpieza manual de tokens expirados (Redis TTL se encarga automáticamente)
-     * Este método es para casos especiales o mantenimiento
-     */
-    public int cleanupExpiredTokens() {
-        try {
-            Set<String> tokenKeys = redisTemplate.keys(TOKEN_PREFIX + "*");
-            int cleanedCount = 0;
-            
-            if (tokenKeys != null) {
-                for (String key : tokenKeys) {
-                    RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(key);
-                    if (token != null && token.isExpired()) {
-                        redisTemplate.delete(key);
-                        cleanedCount++;
-                    }
-                }
-            }
-            
-            log.info("Manual cleanup removed {} expired tokens", cleanedCount);
-            return cleanedCount;
-            
-        } catch (Exception e) {
-            log.error("Error during manual token cleanup", e);
-            return 0;
-        }
+         RefreshToken token = findByToken(tokenString);
+        return token != null && token.isValid();
     }
 }

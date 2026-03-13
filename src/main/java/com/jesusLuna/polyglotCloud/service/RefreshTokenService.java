@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +25,7 @@ public class RefreshTokenService {
     private final RefreshTokenRedisRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Value("${app.refresh-token.max-per-user:5}")
+    @Value("${app.jwt.refresh-token.max-per-user:5}")
     private int maxTokensPerUser;
     
     @Transactional
@@ -139,19 +138,6 @@ public class RefreshTokenService {
                 });
 
         log.info("Revoked {} oldest tokens for user: {}", activeTokens.size() - keepCount, userId);
-    }
-
-    /**
-     * Limpieza automática de tokens expirados
-     * Nota: Redis TTL se encarga automáticamente, pero mantenemos para casos especiales
-     */
-    @Scheduled(cron = "0 0 2 * * *") // Ejecuta a las 2 AM diariamente
-    public void cleanupExpiredTokens() {
-        log.info("Starting manual cleanup of expired refresh tokens in Redis");
-
-        int cleanedCount = refreshTokenRepository.cleanupExpiredTokens();
-
-        log.info("Manual cleanup completed: {} expired tokens removed from Redis", cleanedCount);
     }
     
 }
