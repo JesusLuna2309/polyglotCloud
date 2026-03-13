@@ -83,26 +83,23 @@ public class RefreshTokenRedisRepository {
      */
     public List<RefreshToken> findActiveByUserId(UUID userId) {
         try {
-            String pattern = USER_TOKENS_PREFIX + userId + ":*";
-            Set<String> keys = redisTemplate.keys(pattern);
+            String indexKey = USER_TOKENS_PREFIX + userId;
+
+            Set<Object> tokenIds = redisTemplate.opsForSet().members(indexKey);
             
-            if (keys == null || keys.isEmpty()) {
+            if (tokenIds == null || tokenIds.isEmpty()) {
                 return List.of();
             }
             
-            // Obtener IDs de tokens del usuario
-            List<String> tokenIds = keys.stream()
-                    .map(key -> (String) redisTemplate.opsForValue().get(key))
-                    .filter(java.util.Objects::nonNull)
-                    .collect(Collectors.toList());
-            
-            // Buscar los tokens completos
-            return tokenIds.stream()
-                    .map(this::findById)
+            List<RefreshToken> tokens = tokenIds.stream()
+                    .map(id -> findById(id.toString()))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .filter(token -> !token.isRevoked() && !token.isExpired())
                     .collect(Collectors.toList());
+
+            log.debug("Found {} active refresh tokens for user: {}", tokens.size(), userId);
+            return tokens;
                     
         } catch (Exception e) {
             log.error("Error finding active tokens for user: {}", userId, e);

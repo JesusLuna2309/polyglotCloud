@@ -63,8 +63,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    //TODO: Hacer que el refresh token se genere en base 64
-    public String generateRefreshToken(UUID userId) {
+    public String generateRefreshToken() {
 
         byte[] randomBytes = new byte[32];
         new SecureRandom().nextBytes(randomBytes);

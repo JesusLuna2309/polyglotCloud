@@ -23,8 +23,6 @@ public class RedisConfig {
 
     @Bean
     public ObjectMapper redisObjectMapper() {
-        // ✅ En Jackson 3, JavaTimeModule está incluido por defecto
-        // Solo necesitas usar el ObjectMapper con configuración mínima
         return JsonMapper.builder()
                 .build();
     }

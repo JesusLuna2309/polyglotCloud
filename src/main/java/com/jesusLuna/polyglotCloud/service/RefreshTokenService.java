@@ -1,5 +1,6 @@
 package com.jesusLuna.polyglotCloud.service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -33,7 +34,7 @@ public class RefreshTokenService {
         log.info("Creating refresh token for user: {}", userId);
 
         // Generate JWT refresh token
-        String tokenString = jwtTokenProvider.generateRefreshToken(userId);
+        String tokenString = jwtTokenProvider.generateRefreshToken();
         Instant expiresAt = Instant.now().plusMillis(jwtTokenProvider.getRefreshExpirationMs());
 
         // Check if user has too many active tokens
@@ -47,7 +48,8 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(tokenString)
                 .userId(userId)
-                .id(new UUID(0, tokenString.hashCode()))
+                .id(UUID.nameUUIDFromBytes(tokenString.getBytes(StandardCharsets.UTF_8)))
+                .createdAt(Instant.now())
                 .expiresAt(expiresAt)
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)
