@@ -13,7 +13,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.jesusLuna.polyglotCloud.models.RefreshToken;
-import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class RefreshTokenRedisRepository {
-    
-    
-    private final PostQuantumPasswordEncoder encoder; // inyecta tu encoder
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final TokenSecurityService tokenSecurityService;
