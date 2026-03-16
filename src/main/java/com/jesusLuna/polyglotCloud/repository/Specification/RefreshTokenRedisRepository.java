@@ -42,7 +42,10 @@ public class RefreshTokenRedisRepository {
 
     long ttlSeconds = Duration.between(Instant.now(), token.getExpiresAt()).getSeconds();
 
-    // Guardar el refresh token en Redis con TTL
+    // Antes de guardar en Redis, asegurarse de no serializar el valor del token en texto plano
+    token.setToken(null);
+
+    // Guardar el refresh token en Redis con TTL (sin el valor del token en texto plano)
     redisTemplate.opsForValue().set(redisKey, token, ttlSeconds, TimeUnit.SECONDS);
 
     // Guardar índice por usuario (puede seguir usando rawToken)
