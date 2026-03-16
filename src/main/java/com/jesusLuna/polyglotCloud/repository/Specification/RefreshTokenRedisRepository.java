@@ -196,7 +196,34 @@ public class RefreshTokenRedisRepository {
      */
     public long countActiveTokensByUserId(UUID userId, Instant now) {
         String indexKey = USER_TOKENS_PREFIX + userId;
-        return redisTemplate.opsForSet().size(indexKey);
+        Set<Object> redisKeys = redisTemplate.opsForSet().members(indexKey);
+
+        if (redisKeys == null || redisKeys.isEmpty()) {
+            return 0L;
+        }
+
+        long activeCount = 0L;
+
+        for (Object keyObj : redisKeys) {
+            if (keyObj == null) {
+                continue;
+            }
+
+            String redisKey = keyObj.toString();
+            RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(redisKey);
+
+            // Limpia referencias obsoletas en el índice
+            if (token == null) {
+                redisTemplate.opsForSet().remove(indexKey, redisKey);
+                continue;
+            }
+
+            if (token.isValid()) {
+                activeCount++;
+            }
+        }
+
+        return activeCount;
     }
 
     /**
