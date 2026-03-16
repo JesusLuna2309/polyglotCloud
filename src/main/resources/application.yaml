@@ -4,7 +4,7 @@ spring:
 
 security:
   hmac:
-    secret: ${HMAC_SECRET}
+    secret: ${HMAC_SECRET:?HMAC_SECRET environment variable must be set for HMAC security}
 
   # ✅ CONFIGURACIÓN DE BASE DE DATOS
   datasource:
