@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TokenSecurityService {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final String hmacSecret;
 
     public TokenSecurityService(@Value("${security.hmac.secret}") String hmacSecret) {
@@ -35,7 +37,7 @@ public class TokenSecurityService {
     public String generateSecureToken(String context) {
         // Generar 256 bits de entropía aleatoria
         byte[] randomBytes = new byte[32];
-        new SecureRandom().nextBytes(randomBytes);
+        SECURE_RANDOM.nextBytes(randomBytes);
 
         // Añadir timestamp para unicidad
         long timestamp = System.nanoTime();
