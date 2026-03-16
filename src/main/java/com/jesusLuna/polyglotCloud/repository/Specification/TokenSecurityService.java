@@ -25,9 +25,9 @@ public class TokenSecurityService {
     public String deriveRedisKey(String token) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec keySpec = new SecretKeySpec(hmacSecret.getBytes(), "HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(hmacSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
             mac.init(keySpec);
-            byte[] hmacBytes = mac.doFinal(token.getBytes());
+            byte[] hmacBytes = mac.doFinal(token.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(hmacBytes);
         } catch (Exception e) {
             throw new RuntimeException("Failed to derive Redis key from token", e);
