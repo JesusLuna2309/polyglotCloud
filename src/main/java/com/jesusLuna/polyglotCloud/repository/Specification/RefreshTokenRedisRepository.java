@@ -47,10 +47,11 @@ public class RefreshTokenRedisRepository {
 
     // Guardar índice por usuario (puede seguir usando rawToken)
     String userIndexKey = USER_TOKENS_PREFIX + token.getUserId();
+    Boolean userIndexKeyExisted = redisTemplate.hasKey(userIndexKey);
     redisTemplate.opsForSet().add(userIndexKey, redisKey);
     
     // Establecer TTL para el índice si no existía
-    if (Boolean.FALSE.equals(redisTemplate.hasKey(userIndexKey))) {
+    if (Boolean.FALSE.equals(userIndexKeyExisted)) {
         redisTemplate.expire(userIndexKey, ttlSeconds, TimeUnit.SECONDS);
     }
 
