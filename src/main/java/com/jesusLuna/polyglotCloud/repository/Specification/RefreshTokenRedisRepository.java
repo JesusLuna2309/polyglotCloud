@@ -62,29 +62,29 @@ public class RefreshTokenRedisRepository {
     /**
      * Busca un refresh token por su valor
      */
-    public RefreshToken findByToken(String tokenString) {
-    String redisKey = null;
-    try {
-        // Derivar la clave determinista para Redis usando HMAC
-        redisKey = TOKEN_PREFIX + tokenSecurityService.deriveRedisKey(tokenString);
+    public Optional<RefreshToken> findByToken(String tokenString) {
+        String redisKey = null;
+        try {
+            // Derivar la clave determinista para Redis usando HMAC
+            redisKey = TOKEN_PREFIX + tokenSecurityService.deriveRedisKey(tokenString);
 
-        RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(redisKey);
+            RefreshToken token = (RefreshToken) redisTemplate.opsForValue().get(redisKey);
 
-        if (token != null) {
-            log.debug("Found refresh token in Redis: {}", token.getId());
+            if (token != null) {
+                log.debug("Found refresh token in Redis: {}", token.getId());
+            }
+
+            return Optional.ofNullable(token);
+
+        } catch (Exception e) {
+            if (redisKey != null) {
+                log.error("Error finding refresh token in Redis for key: {}", redisKey, e);
+            } else {
+                log.error("Error deriving Redis key for refresh token", e);
+            }
+            return Optional.empty();
         }
-
-        return token;
-
-    } catch (Exception e) {
-        if (redisKey != null) {
-            log.error("Error finding refresh token in Redis for key: {}", redisKey, e);
-        } else {
-            log.error("Error deriving Redis key for refresh token", e);
-        }
-        return null;
     }
-}
 
     /**
      * Obtiene todos los tokens activos de un usuario
