@@ -32,19 +32,19 @@ public class RefreshTokenRedisRepository {
     public RefreshToken save(RefreshToken token) {
     // Generar un token seguro (aleatorio) para el usuario
     String rawToken = tokenSecurityService.generateSecureToken("refresh");
+
+    // Actualizar el valor del token en la entidad antes de almacenarlo
+    token.setToken(rawToken);
     
     // Derivar la clave determinista para Redis usando HMAC
     String redisKey = TOKEN_PREFIX + tokenSecurityService.deriveRedisKey(rawToken);
 
     long ttlSeconds = Duration.between(Instant.now(), token.getExpiresAt()).getSeconds();
 
-    // Antes de guardar en Redis, asegurarse de no serializar el valor del token en texto plano
-    token.setToken(null);
-
-    // Guardar el refresh token en Redis con TTL (sin el valor del token en texto plano)
+    // Guardar el refresh token en Redis con TTL
     redisTemplate.opsForValue().set(redisKey, token, ttlSeconds, TimeUnit.SECONDS);
 
-    // Guardar índice por usuario (puede seguir usando rawToken)
+    // Guardar índice por usuario
     String userIndexKey = USER_TOKENS_PREFIX + token.getUserId();
     redisTemplate.opsForSet().add(userIndexKey, redisKey);
     
@@ -55,7 +55,6 @@ public class RefreshTokenRedisRepository {
     }
 
     // Retornar el token con el valor aleatorio que el cliente usará
-    token.setToken(rawToken); // actualizar el token para que se devuelva al cliente
     return token;
 }
 
