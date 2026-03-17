@@ -15,20 +15,14 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @EnableCaching
 public class RedisConfig {
 
     @Bean
-    public ObjectMapper redisObjectMapper() {
-        return JsonMapper.builder()
-                .build();
-    }
-
-    @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory, ObjectMapper redisObjectMapper) {
+        
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         
