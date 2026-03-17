@@ -158,6 +158,13 @@ public class RefreshTokenRedisRepository {
                 }
             }
 
+            // Clean up per-user index to avoid stale members
+            redisTemplate.opsForSet().remove(indexKey, redisKeys.toArray());
+            Long remaining = redisTemplate.opsForSet().size(indexKey);
+            if (remaining == null || remaining == 0L) {
+                redisTemplate.delete(indexKey);
+            }
+
             log.info("Revoked {} tokens for user: {}", count, userId);
             return count;
             
