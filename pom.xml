@@ -147,7 +147,15 @@
             <artifactId>bucket4j-core</artifactId>
             <version>${bucket4j.version}</version>
         </dependency>
-        
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-redis</artifactId>
+            <version>8.10.1</version> <!-- o la última estable -->
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+        </dependency>
         <!-- TESTING -->
         <!-- ÚNICA DEPENDENCIA DE TESTING NECESARIA -->
         <dependency>

@@ -72,6 +72,20 @@ app:
       expiration-s: ${JWT_COOKIE_EXPIRATION:604800}  # 7 días
       secure: ${JWT_COOKIE_SECURE:false}  # true en producción
       same-site: ${JWT_COOKIE_SAME_SITE:Lax}
+  
+  rate-limit:
+    translation:
+      requests-per-minute: 10    # 10 traducciones por minuto por usuario
+      requests-per-hour: 50      # 50 traducciones por hora por usuario
+    anonymous:
+      requests-per-minute: 2     # 2 requests por minuto por IP sin auth
+    
+  # 🚨 ABUSE DETECTION
+  abuse-detection:
+    enabled: true
+    threshold: 5                 # 5 infracciones = bloqueo temporal
+    window-hours: 1             # Ventana de detección de 1 hora
+    block-duration-hours: 2
 
   # CONFIGURACIÓN DE EMAIL
   email:

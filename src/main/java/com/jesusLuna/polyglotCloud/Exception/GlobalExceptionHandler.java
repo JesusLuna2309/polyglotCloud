@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -105,6 +106,29 @@ public class GlobalExceptionHandler {
         log.warn("Forbidden access: {}", ex.getMessage());
         
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitException(
+            RateLimitExceededException ex, WebRequest request) {
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", Instant.now());
+        response.put("status", 429);
+        response.put("error", "Rate Limit Exceeded");
+        response.put("message", ex.getMessage());
+        response.put("path", request.getDescription(false).replace("uri=", ""));
+        
+        if (ex.getRetryAfter() != null) {
+            response.put("retryAfter", ex.getRetryAfter());
+        }
+        
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Retry-After", "60"); // Reintentar después de 60 segundos
+        
+        return ResponseEntity.status(429).headers(headers).body(response);
     }
 
     /**

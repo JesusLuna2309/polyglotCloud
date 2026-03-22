@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final TranslationRateLimitFilter translationRateLimitFilter;
 
 
     @Bean
@@ -50,6 +51,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(translationRateLimitFilter, JwtAuthenticationFilter.class)
         .build();
     }
 
