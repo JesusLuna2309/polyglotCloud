@@ -1,4 +1,7 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
+    
   application:
     name: polyglotCloud
 
@@ -35,9 +38,9 @@ spring:
     redis:
       host: ${REDIS_HOST:your-redis-instance.cloud}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
-      ssl:
-        enabled: true
+      password: ${REDIS_PASSWORD:}
+      #ssl:
+        #enabled: true
       timeout: 60000ms
       lettuce:
         pool:
