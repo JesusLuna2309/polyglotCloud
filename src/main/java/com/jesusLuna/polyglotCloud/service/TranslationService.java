@@ -21,6 +21,7 @@ import com.jesusLuna.polyglotCloud.models.Snippet;
 import com.jesusLuna.polyglotCloud.models.Translations.Translation;
 import com.jesusLuna.polyglotCloud.models.Translations.TranslationVersion;
 import com.jesusLuna.polyglotCloud.models.User;
+import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
 import com.jesusLuna.polyglotCloud.repository.LanguageRepository;
 import com.jesusLuna.polyglotCloud.repository.SnippetRepository;
@@ -223,7 +224,7 @@ public class TranslationService {
         Translation translation = getTranslationById(translationId);
         
         // Verificar que es el autor
-        if (!translation.getRequestedBy().getId().equals(userId)) {
+        if (!translation.getRequestedBy().getId().equals(userId) && translation.getRequestedBy().getRole().hasPermission(Role.TRANSLATOR)) {
             throw new ForbiddenAccessException("Only the author can submit for review");
         }
         

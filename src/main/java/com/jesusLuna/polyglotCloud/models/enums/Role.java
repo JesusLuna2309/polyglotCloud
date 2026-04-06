@@ -6,13 +6,17 @@ public enum Role {
      */
     USER(0),
     /**
+     * Nivel de rol de traductor.
+     */
+    TRANSLATOR(1),
+    /**
      * Nivel de rol de moderador.
      */
-    MODERATOR(1),
+    MODERATOR(2),
     /**
      * Nivel de rol de administrador.
      */
-    ADMIN(2);
+    ADMIN(3);
 
     private final int level;
 

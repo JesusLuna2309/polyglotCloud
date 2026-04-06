@@ -27,7 +27,7 @@ public class CustomUserPrincipal implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getId().toString();
+        return user.getUsername();
     }
 
     @Override

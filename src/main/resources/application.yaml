@@ -77,11 +77,16 @@ app:
       same-site: ${JWT_COOKIE_SAME_SITE:Lax}
   
   rate-limit:
+    global:
+      requests-per-minute: 50      # 50 requests por minuto para usuarios generales
     translation:
-      requests-per-minute: 10    # 10 traducciones por minuto por usuario
-      requests-per-hour: 50      # 50 traducciones por hora por usuario
+      requests-per-minute: 5       # 5 traducciones por minuto
+      requests-per-hour: 20        # 20 traducciones por hora
+    auth:
+      requests-per-minute: 3       # 3 intentos de login por minuto
+      requests-per-hour: 10        # 10 intentos de login por hora
     anonymous:
-      requests-per-minute: 2     # 2 requests por minuto por IP sin auth
+      requests-per-minute: 2       # 2 requests por minuto para IPs anónimas
     
   # 🚨 ABUSE DETECTION
   abuse-detection:

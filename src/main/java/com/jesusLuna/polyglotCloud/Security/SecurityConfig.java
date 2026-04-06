@@ -23,20 +23,22 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final TranslationRateLimitFilter translationRateLimitFilter;
+    private final GlobalRateLimitFilter globalRateLimitFilter;
 
     /**
      * 🎭 JERARQUÍA DE ROLES:
-     * ADMIN > MODERATOR > USER
-     * - ADMIN tiene todos los permisos de MODERATOR y USER
-     * - MODERATOR tiene todos los permisos de USER
+     * ADMIN > MODERATOR > TRANSLATOR > USER
+     * - ADMIN tiene todos los permisos de MODERATOR, TRANSLATOR y USER
+     * - MODERATOR tiene todos los permisos de TRANSLATOR y USER
+     * - TRANSLATOR tiene todos los permisos de USER
      * - USER tiene permisos básicos
      */
     @Bean
     public RoleHierarchy roleHierarchy() {
         return RoleHierarchyImpl.withDefaultRolePrefix()
                 .role("ADMIN").implies("MODERATOR")
-                .role("MODERATOR").implies("USER")
+                .role("MODERATOR").implies("TRANSLATOR")
+                .role("TRANSLATOR").implies("USER")
                 .build();
     }
 
@@ -67,7 +69,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-        .addFilterBefore(translationRateLimitFilter, JwtAuthenticationFilter.class)
+        .addFilterBefore(globalRateLimitFilter, JwtAuthenticationFilter.class)
         .build();
     }
 
