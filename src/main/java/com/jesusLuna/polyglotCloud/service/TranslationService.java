@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jesusLuna.polyglotCloud.dto.TranslationDTO;
+import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
@@ -85,7 +86,6 @@ public class TranslationService {
                 .sourceLanguage(sourceSnippet.getLanguage())
                 .targetLanguage(targetLanguage)
                 .requestedBy(requestedBy)
-                .sourceCode(sourceSnippet.getContent())
                 .status(TranslationStatus.PENDING)
                 .contentHash(contentHash)
                 .currentVersionNumber(1)
@@ -136,15 +136,23 @@ public class TranslationService {
             Translation translation = translationRepository.findById(translationId)
                     .orElseThrow(() -> new ResourceNotFoundException("Translation", "id", translationId));
 
+            String sourceCode = translation.getSourceSnippet().getContent();
+            String sourceLanguage = translation.getSourceLanguage().getName();
+            String targetLanguage = translation.getTargetLanguage().getName();
+
+            if (sourceCode == null || sourceCode.trim().isEmpty()) {
+                throw new BusinessRuleException("Source snippet content is empty or null");
+            }
+
             // Marcar como procesando
             translation.setStatus(TranslationStatus.PROCESSING);
             translationRepository.save(translation);
 
             // Simular traducción (aquí irías con OpenAI/Claude/etc)
             String translatedCode = performTranslation(
-                    translation.getSourceCode(),
-                    translation.getSourceLanguage().getName(),
-                    translation.getTargetLanguage().getName()
+                    sourceCode,
+                    sourceLanguage,
+                    targetLanguage
             );
 
             // Calcular tiempo de procesamiento

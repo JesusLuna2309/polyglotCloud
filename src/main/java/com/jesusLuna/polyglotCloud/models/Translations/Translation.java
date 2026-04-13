@@ -69,9 +69,6 @@ public class Translation {
     @JoinColumn(name = "requested_by", nullable = false)
     private User requestedBy;
 
-    @Column(name = "source_code", columnDefinition = "TEXT", nullable = false)
-    private String sourceCode;
-
     @Column(name = "translated_code", columnDefinition = "TEXT")
     private String translatedCode;
 
@@ -80,7 +77,7 @@ public class Translation {
     @Builder.Default
     private TranslationStatus status = TranslationStatus.PENDING;
 
-        @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by")
     private User reviewedBy;
     

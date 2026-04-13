@@ -120,7 +120,6 @@ public class TranslationDeduplicationService {
                 .sourceSnippet(existingTranslation.getSourceSnippet())
                 .sourceLanguage(existingTranslation.getSourceLanguage())
                 .targetLanguage(existingTranslation.getTargetLanguage())
-                .sourceCode(existingTranslation.getSourceCode())
                 .translatedCode(existingTranslation.getTranslatedCode())
                 .status(TranslationStatus.COMPLETED)
                 .processingTimeMs(0L) // Reuso instantáneo
@@ -172,10 +171,12 @@ public class TranslationDeduplicationService {
             String sourceCode) {
         
         boolean languageMatch = existing.getSourceLanguage().getId().equals(sourceLanguageId) &&
-                               existing.getTargetLanguage().getId().equals(targetLanguageId);
+                                existing.getTargetLanguage().getId().equals(targetLanguageId);
         
-        boolean codeMatch = normalizecode(existing.getSourceCode())
-                           .equals(normalizecode(sourceCode));
+        String existingSourceCode = existing.getSourceSnippet().getContent(); // Usa el método auxiliar
+
+        boolean codeMatch = normalizecode(existingSourceCode)
+                            .equals(normalizecode(sourceCode));
         
         return languageMatch && codeMatch;
     }

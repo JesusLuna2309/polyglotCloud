@@ -4,7 +4,6 @@ CREATE TABLE translations (
     source_language_id UUID NOT NULL REFERENCES languages(id),
     target_language_id UUID NOT NULL REFERENCES languages(id),
     requested_by UUID NOT NULL REFERENCES users(id),
-    source_code TEXT NOT NULL,
     translated_code TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     error_message VARCHAR(1000),
