@@ -1,13 +1,11 @@
 package com.jesusLuna.polyglotCloud.service;
 
-import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,20 +49,30 @@ public class TranslationService {
 
     @Transactional
     public Translation requestTranslation(TranslationDTO.TranslationRequest request, User requestedBy) {
-        log.info("Requesting translation from snippet {} to language {}", request.snippetId(), request.targetLanguage());
+        log.info("Requesting translation from snippet {} to language {}", request.snippetId(), request.targetLanguageId());
 
         // Validar snippet
         Snippet sourceSnippet = snippetRepository.findById(request.snippetId())
                 .orElseThrow(() -> new ResourceNotFoundException("Snippet", "id", request.snippetId()));
 
         // Validar idioma destino
-        Language targetLanguage = languageRepository.findByNameIgnoreCase(request.targetLanguage())
-                .orElseThrow(() -> new ResourceNotFoundException("Language", "name", request.targetLanguage()));
+        Language targetLanguage = languageRepository.findById(request.targetLanguageId())
+                .orElseThrow(() -> new ResourceNotFoundException("Language", "id", request.targetLanguageId()));
 
+        // Validar que no sea el mismo idioma
+        if (sourceSnippet.getLanguage().getId().equals(targetLanguage.getId())) {
+            throw new BusinessRuleException("Cannot translate to the same language");
+        }
+
+        // ✅ VALIDAR QUE SE PROPORCIONE TRADUCCIÓN MANUAL
+        if (request.manualTranslation() == null || request.manualTranslation().trim().isEmpty()) {
+            throw new BusinessRuleException("Manual translation is required");
+        }
+                
         // 🔍 VERIFICAR SI EXISTE TRADUCCIÓN DUPLICADA
         Optional<Translation> existingTranslation = deduplicationService.findExistingTranslation(
             sourceSnippet.getLanguage().getId(),
-            targetLanguage.getId(), 
+            targetLanguage.getId(),
             sourceSnippet.getContent()
         );
 
@@ -86,7 +94,9 @@ public class TranslationService {
                 .sourceLanguage(sourceSnippet.getLanguage())
                 .targetLanguage(targetLanguage)
                 .requestedBy(requestedBy)
-                .status(TranslationStatus.PENDING)
+                .translationNotes(request.translationNotes())
+                .translatedCode(request.manualTranslation())
+                .status(TranslationStatus.COMPLETED)
                 .contentHash(contentHash)
                 .currentVersionNumber(1)
                 .build();
@@ -94,7 +104,9 @@ public class TranslationService {
         Translation saved = translationRepository.save(translation);
 
         // Procesar asíncronamente solo si es nueva
-        processTranslationAsync(saved.getId());
+        //TODO: Revisar esta Logica bien
+        createInitialVersion(saved, request.manualTranslation());
+        //processTranslationAsync(saved.getId());
 
         return saved;
     }
@@ -125,7 +137,8 @@ public class TranslationService {
         return translationRepository.findByRequestedByIdOrderByCreatedAtDesc(userId, pageable);
     }
 
-    @Async("translationExecutor")
+    /**
+     * @Async("translationExecutor")
     @Transactional
     public void processTranslationAsync(UUID translationId) {
         log.info("Starting async processing for translation: {}", translationId);
@@ -194,16 +207,19 @@ public class TranslationService {
             }
         }
     }
+     * @param translation
+     * @param translatedCode
+     */
 
     private void createInitialVersion(Translation translation, String translatedCode) {
         log.debug("Creating initial version for translation {}", translation.getId());
         
         TranslationVersion initialVersion = TranslationVersion.builder()
                 .translation(translation)
-                .versionNumber(1)
+                .versionNumber(translation.getCurrentVersionNumber() + 1)
                 .translatedCode(translatedCode)
                 .author(translation.getRequestedBy()) // El autor original es quien crea la primera versión
-                .changeNotes("Initial AI-generated translation")
+                .changeNotes(translation.getTranslationNotes())
                 .isCurrentVersion(true)
                 .build();
 
@@ -228,12 +244,13 @@ public class TranslationService {
     }
 
     @Transactional
+    
     public TranslationDTO.TranslationResponse submitForReview(UUID translationId, UUID userId) {
         Translation translation = getTranslationById(translationId);
         
         // Verificar que es el autor
-        if (!translation.getRequestedBy().getId().equals(userId) && translation.getRequestedBy().getRole().hasPermission(Role.TRANSLATOR)) {
-            throw new ForbiddenAccessException("Only the author can submit for review");
+        if (!translation.getRequestedBy().getRole().hasPermission(Role.TRANSLATOR)) {
+            throw new ForbiddenAccessException("Only an user with TRANSLATOR role can submit for review");
         }
         
         // Cambiar estado

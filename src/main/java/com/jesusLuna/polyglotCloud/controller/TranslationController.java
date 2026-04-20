@@ -2,9 +2,9 @@ package com.jesusLuna.polyglotCloud.controller;
 
 import java.util.UUID;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jesusLuna.polyglotCloud.dto.TranslationDTO;
+import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
 import com.jesusLuna.polyglotCloud.mapper.TranslationMapper;
-import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.Translations.Translation;
+import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.TranslationStatus;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.service.TranslationService;
@@ -47,6 +48,7 @@ public class TranslationController {
     private final UserRepository userRepository;
 
     @PostMapping
+    @PreAuthorize("hasRole('TRANSLATOR')")
     @Operation(
         summary = "Request code translation",
         description = "Requests asynchronous translation of a code snippet to another programming language"
@@ -62,7 +64,7 @@ public class TranslationController {
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
         log.info("Translation request received from user: {} for snippet: {} to language: {}", 
-                userDetails.getUsername(), request.snippetId(), request.targetLanguage());
+                userDetails.getUsername(), request.snippetId(), request.targetLanguageId());
 
         User user = userRepository.findByUsernameAndDeletedAtIsNull(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -71,7 +73,7 @@ public class TranslationController {
         
         TranslationDTO.TranslationStatusResponse response = translationMapper.toStatusResponse(translation);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")
@@ -126,16 +128,20 @@ public class TranslationController {
     }
 
     /**
-     * Enviar traducción para revisión (solo autor)
-     */
+     * Enviar traducción para revisión (solo traductores)     */
     @PostMapping("/{id}/submit-review")
+    @PreAuthorize("hasRole('TRANSLATOR')")
     @Operation(summary = "Submit translation for review", description = "Submit translation for moderation review")
     public ResponseEntity<TranslationDTO.TranslationResponse> submitForReview(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails userDetails) {
         
-        UUID userId = UUID.fromString(userDetails.getUsername());
-        TranslationDTO.TranslationResponse response = translationService.submitForReview(id, userId);
+            String loginIdentifier = userDetails.getUsername();
+            
+            User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
+                    .orElseThrow(() -> new ForbiddenAccessException("User not found"));
+
+        TranslationDTO.TranslationResponse response = translationService.submitForReview(id, currentUser.getId());
         
         return ResponseEntity.ok(response);
     }
@@ -151,8 +157,12 @@ public class TranslationController {
             @RequestBody @Valid TranslationDTO.ModerationRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         
-        UUID reviewerId = UUID.fromString(userDetails.getUsername());
-        TranslationDTO.TranslationResponse response = translationService.approveTranslation(id, reviewerId, request.notes());
+        String loginIdentifier = userDetails.getUsername();
+        
+        User reviewUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
+                .orElseThrow(() -> new ForbiddenAccessException("User not found"));
+        
+        TranslationDTO.TranslationResponse response = translationService.approveTranslation(id, reviewUser.getId(), request.notes());
         
         return ResponseEntity.ok(response);
     }
@@ -168,8 +178,12 @@ public class TranslationController {
             @RequestBody @Valid TranslationDTO.ModerationRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         
-        UUID reviewerId = UUID.fromString(userDetails.getUsername());
-        TranslationDTO.TranslationResponse response = translationService.rejectTranslation(id, reviewerId, request.notes());
+        String loginIdentifier = userDetails.getUsername();
+        
+        User reviewUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
+                .orElseThrow(() -> new ForbiddenAccessException("User not found"));
+
+        TranslationDTO.TranslationResponse response = translationService.rejectTranslation(id, reviewUser.getId(), request.notes());
         
         return ResponseEntity.ok(response);
     }

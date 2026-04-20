@@ -166,7 +166,13 @@ public class TranslationVoteService {
                 .findByTranslationIdOrderByVersionNumberAsc(translationId);
 
         if (allVersions.isEmpty()) {
-            return new TranslationVoteDTO.TopVersions(translationId, List.of(), List.of());
+            return new TranslationVoteDTO.TopVersions(
+                translationId,
+                null,        // bestRated
+                null,        // mostRecent  
+                null,        // currentVersion
+                List.of()    // topVersions (lista vacía está bien aquí)
+            );
         }
 
         // Obtener votos del usuario actual para estas versiones si está logueado
@@ -206,7 +212,16 @@ public class TranslationVoteService {
                 .limit(5)
                 .collect(Collectors.toList());
 
-        return new TranslationVoteDTO.TopVersions(translationId, topByScore, recent);
+        return new TranslationVoteDTO.TopVersions(
+            translationId,
+            topByScore.isEmpty() ? null : topByScore.get(0),  // bestRated (el mejor de la lista)
+            recent.isEmpty() ? null : recent.get(0),          // mostRecent (el más reciente)
+            versionsWithVotes.stream()                        // currentVersion
+                .filter(v -> v.isCurrentVersion())
+                .findFirst()
+                .orElse(null),
+            topByScore                                        // topVersions (lista completa)
+        );
     }
 
     @Transactional

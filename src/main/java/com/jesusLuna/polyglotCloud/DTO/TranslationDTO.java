@@ -12,12 +12,19 @@ import jakarta.validation.constraints.Size;
 public class TranslationDTO {
         
         public record TranslationRequest(
-                @NotNull(message = "Snippet ID is required")
-                UUID snippetId,
-                
-                @NotBlank(message = "Target language is required")
-                String targetLanguage
-        ) {}
+        @NotNull(message = "Snippet ID is required")
+        UUID snippetId,
+        
+        @NotNull(message = "Target language is required")
+        UUID targetLanguageId,
+        
+        @NotBlank(message = "Manual translation is required")
+        @Size(max = 50000, message = "Manual translation cannot exceed 50000 characters")
+        String manualTranslation,
+        
+        @Size(max = 1000, message = "Translation notes cannot exceed 1000 characters")
+        String translationNotes
+)        {}
 
         public record TranslationResponse(
                 UUID id,

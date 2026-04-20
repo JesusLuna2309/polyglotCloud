@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jesusLuna.polyglotCloud.dto.TranslationVoteDTO;
+import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.models.User;
+import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.service.TranslationVoteService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +35,8 @@ import lombok.RequiredArgsConstructor;
 public class TranslationRankingController {
 
     private final TranslationVoteService voteService;
+    private final UserRepository userRepository;
+
 
     @GetMapping("/{translationId}/top-versions")
     @Operation(
@@ -42,8 +47,13 @@ public class TranslationRankingController {
     public ResponseEntity<TranslationVoteDTO.TopVersions> getTopVersions(
             @PathVariable UUID translationId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        
+        String loginIdentifier = userDetails.getUsername();
+        
+        User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
+                .orElseThrow(() -> new ForbiddenAccessException("User not found"));
 
-        UUID currentUserId = userDetails != null ? UUID.fromString(userDetails.getUsername()) : null;
+        UUID currentUserId = currentUser != null ? currentUser.getId() : null;
         
         TranslationVoteDTO.TopVersions topVersions = voteService.getTopVersions(translationId, currentUserId);
         

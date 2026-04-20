@@ -1,6 +1,7 @@
 package com.jesusLuna.polyglotCloud.dto;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import com.jesusLuna.polyglotCloud.models.enums.VoteType;
@@ -48,8 +49,10 @@ public class TranslationVoteDTO {
         ) {}
 
         public record TopVersions(
-                UUID translationId,
-                java.util.List<VersionWithVotes> topVersionsByScore,
-                java.util.List<VersionWithVotes> recentVersions
-        ) {}
+            UUID translationId,
+            VersionWithVotes bestRated,
+            VersionWithVotes mostRecent,
+            VersionWithVotes currentVersion,
+            List<VersionWithVotes> topVersions
+    ) {}
 }
