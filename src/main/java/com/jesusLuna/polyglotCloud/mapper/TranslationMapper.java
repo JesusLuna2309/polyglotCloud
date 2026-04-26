@@ -12,6 +12,7 @@ public interface TranslationMapper {
     @Mapping(source = "sourceSnippet.id", target = "snippetId")
     @Mapping(source = "sourceLanguage.name", target = "sourceLanguage")
     @Mapping(source = "targetLanguage.name", target = "targetLanguage")
+    @Mapping(expression = "java(translation.getSourceSnippet().getContent())", target = "sourceCode")  // ✅ Usar método auxiliar
     @Mapping(expression = "java(translation.getVersions().size())", target = "totalVersions")
     TranslationDTO.TranslationResponse toResponse(Translation translation);
     

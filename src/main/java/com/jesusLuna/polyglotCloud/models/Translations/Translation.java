@@ -68,9 +68,6 @@ public class Translation {
     @JoinColumn(name = "requested_by", nullable = false)
     private User requestedBy;
 
-    @Column(name = "source_code", columnDefinition = "TEXT", nullable = false)
-    private String sourceCode;
-
     @Column(name = "translated_code", columnDefinition = "TEXT")
     private String translatedCode;
 
@@ -79,7 +76,7 @@ public class Translation {
     @Builder.Default
     private TranslationStatus status = TranslationStatus.PENDING;
 
-        @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by")
     private User reviewedBy;
     
@@ -117,6 +114,9 @@ public class Translation {
     @Column(name = "current_version_number", nullable = false)
     @Builder.Default
     private Integer currentVersionNumber = 1;
+
+    @Column(name = "content_hash", length = 64, nullable = false)
+    private String contentHash;
 
         public void changeStatus(TranslationStatus newStatus, User reviewer, String notes) {
         if (!this.status.canTransitionTo(newStatus)) {

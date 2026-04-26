@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TranslationVersionController {
 
     private final TranslationVersionService versionService;
+    private final UserRepository userRepository;
 
     @PostMapping
     @Operation(
@@ -58,7 +59,10 @@ public class TranslationVersionController {
             @Valid @RequestBody TranslationVersionDTO.CreateVersionRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        UUID authorId = UUID.fromString(userDetails.getUsername());
+
+        User user = userRepository.findByUsernameAndDeletedAtIsNull(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        UUID authorId = user.getId();
         
         log.info("Creating version for translation {} by user {}", translationId, authorId);
         
@@ -162,8 +166,11 @@ public class TranslationVersionController {
             @PathVariable UUID translationId,
             @PathVariable Integer versionNumber,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-
-        UUID userId = UUID.fromString(userDetails.getUsername());
+        
+        User user = userRepository.findByUsernameAndDeletedAtIsNull(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        UUID userId = user.getId();
         
         log.info("Reverting translation {} to version {} by user {}", 
                 translationId, versionNumber, userId);

@@ -260,30 +260,6 @@ public class SnippetController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @PostMapping("/{originalId}/translate")
-    @Operation(
-        summary = "Traducir snippet a otro lenguaje",
-        description = "Crea una nueva versión del snippet en un lenguaje diferente, manteniendo la vinculación"
-    )
-    public ResponseEntity<SnippetDTO.SnippetDetailResponse> translateSnippet(
-            @PathVariable UUID originalId,
-            @Valid @RequestBody SnippetDTO.SnippetTranslateRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-
-        // 1. Obtener usuario actual
-        String loginIdentifier = userDetails.getUsername();
-        User currentUser = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(loginIdentifier, loginIdentifier)
-                .orElseThrow(() -> new ForbiddenAccessException("User not found"));
-
-        // 2. Crear la traducción (el servicio manejará la lógica de vinculación)
-        Snippet translation = snippetService.translateSnippet(originalId, request, currentUser.getId());
-        
-        // 3. Devolver la nueva versión
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(snippetMapper.toDetailResponse(translation));
-    }
-
     /**
      * Valida y corrige el Pageable para evitar problemas de sort
      */
