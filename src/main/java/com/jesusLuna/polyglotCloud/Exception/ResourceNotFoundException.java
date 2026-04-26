@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.exception;
+package com.jesusLuna.polyglotCloud.Exception;
 
 public class ResourceNotFoundException extends RuntimeException {
 

@@ -5,7 +5,7 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.jesusLuna.polyglotCloud.dto.TranslationVersionDTO;
+import com.jesusLuna.polyglotCloud.DTO.TranslationVersionDTO;
 import com.jesusLuna.polyglotCloud.models.Translations.TranslationVersion;
 
 @Mapper(componentModel = "spring")

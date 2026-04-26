@@ -8,10 +8,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jesusLuna.polyglotCloud.dto.TranslationVersionDTO;
-import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
-import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
+import com.jesusLuna.polyglotCloud.DTO.TranslationVersionDTO;
+import com.jesusLuna.polyglotCloud.Exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.mapper.TranslationVersionMapper;
 import com.jesusLuna.polyglotCloud.models.Translations.Translation;
 import com.jesusLuna.polyglotCloud.models.Translations.TranslationVersion;
