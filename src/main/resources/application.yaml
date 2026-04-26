@@ -78,15 +78,15 @@ app:
   
   rate-limit:
     global:
-      requests-per-minute: 50      # 50 requests por minuto para usuarios generales
+      requests-per-minute: 200      # 200 requests por minuto para usuarios generales
     translation:
-      requests-per-minute: 5       # 5 traducciones por minuto
-      requests-per-hour: 20        # 20 traducciones por hora
+      requests-per-minute: 20       # 20 traducciones por minuto
+      requests-per-hour: 100        # 100 traducciones por hora
     auth:
-      requests-per-minute: 3       # 3 intentos de login por minuto
-      requests-per-hour: 10        # 10 intentos de login por hora
+      requests-per-minute: 10       # 10 intentos de login por minuto
+      requests-per-hour: 30        # 30 intentos de login por hora
     anonymous:
-      requests-per-minute: 2       # 2 requests por minuto para IPs anónimas
+      requests-per-minute: 20       # 2 requests por minuto para IPs anónimas
     
   # 🚨 ABUSE DETECTION
   abuse-detection:
