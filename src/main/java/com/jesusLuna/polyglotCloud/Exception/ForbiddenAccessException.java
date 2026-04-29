@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.Exception;
+package com.jesusLuna.polyglotCloud.exception;
 
 public class ForbiddenAccessException extends RuntimeException {
 

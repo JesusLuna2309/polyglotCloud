@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.Security;
+package com.jesusLuna.polyglotCloud.security;
 
 
 import java.nio.charset.StandardCharsets;

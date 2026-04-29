@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.DTO;
+package com.jesusLuna.polyglotCloud.dto;
 
 import java.time.Instant;
 import java.util.UUID;
