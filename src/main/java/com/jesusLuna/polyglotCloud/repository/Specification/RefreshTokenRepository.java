@@ -1,4 +1,4 @@
-package com.jesusLuna.polyglotCloud.repository.Specification;
+package com.jesusLuna.polyglotCloud.repository.specification;
 
 import java.time.Instant;
 import java.util.List;

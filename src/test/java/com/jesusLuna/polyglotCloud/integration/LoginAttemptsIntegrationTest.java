@@ -24,13 +24,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
 
-import com.jesusLuna.polyglotCloud.DTO.UserDTO;
-import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.dto.UserDTO;
+import com.jesusLuna.polyglotCloud.exception.LoginFailedException;
 import com.jesusLuna.polyglotCloud.models.LoginAttempt;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.LoginAttemptRepository;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 import com.jesusLuna.polyglotCloud.service.AuthService;
 import com.jesusLuna.polyglotCloud.service.UserAuditService;
 
@@ -287,7 +288,7 @@ class LoginAttemptsIntegrationTest {
         try {
             authService.login(loginRequest, ipAddress, userAgent);
             fail("Should have thrown exception for locked account");
-        } catch (com.jesusLuna.polyglotCloud.Exception.LoginFailedException ex) {
+        } catch (LoginFailedException ex) {
             // Then - Error message should be clear
             assertTrue(ex.getMessage().contains("Account temporarily blocked") || 
                       ex.getMessage().contains("Account is locked"), 

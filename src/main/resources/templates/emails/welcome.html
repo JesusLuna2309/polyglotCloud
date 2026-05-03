@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bienvenido a PolyglotCloud!</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #eee; border-top: none; }
+        .welcome-icon { font-size: 50px; margin-bottom: 10px; }
+        .btn { display: inline-block; background: #667eea; color: #ffffff !important; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+        .features { background: #f4f7ff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .feature-item { margin-bottom: 10px; display: flex; align-items: center; }
+        .footer { text-align: center; color: #888; font-size: 12px; margin-top: 20px; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="welcome-icon">🎉</div>
+            <h1>¡Ya eres parte de PolyglotCloud!</h1>
+        </div>
+
+        <div class="content">
+            <p>¡Hola <strong th:text="${username}">Usuario</strong>!</p>
+            
+            <p>Tu cuenta ha sido verificada correctamente. ¡Estamos muy emocionados de tenerte con nosotros!</p>
+            
+            <p><strong>PolyglotCloud</strong> es el lugar donde tus ideas toman forma a través del código. Ya puedes empezar a gestionar tus snippets en múltiples lenguajes de forma segura y eficiente.</p>
+            
+            <div class="features">
+                <p style="margin-top: 0; font-weight: bold; color: #764ba2;">¿Qué puedes hacer ahora?</p>
+                <div class="feature-item">💾 Guardar tus snippets favoritos.</div>
+                <div class="feature-item">🌍 Acceder a tu código desde cualquier lugar.</div>
+                <div class="feature-item">🏷️ Organizar todo por etiquetas y lenguajes.</div>
+            </div>
+
+            <p style="text-align: center;">
+                <a th:href="${dashboardUrl}" class="btn">🚀 Ir a mi Dashboard</a>
+            </p>
+            
+            <p>Si tienes alguna duda sobre cómo empezar, nuestro equipo de soporte está siempre listo para ayudarte.</p>
+            
+            <hr>
+            <p>¡Nos vemos en la nube!</p>
+            <p>El equipo de <strong>PolyglotCloud</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>Este es un email automático, no es necesario responder.</p>
+            <p>¿Necesitas ayuda? Escríbenos a <span th:text="${supportEmail}">support@polyglotcloud.com</span></p>
+            <p>© 2026 PolyglotCloud - Built by developers for developers</p>
+        </div>
+    </div>
+</body>
+</html>

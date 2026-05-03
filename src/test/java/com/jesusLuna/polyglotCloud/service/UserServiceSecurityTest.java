@@ -22,13 +22,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.jesusLuna.polyglotCloud.Exception.ForbiddenAccessException;
-import com.jesusLuna.polyglotCloud.Exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.config.SecurityProperties;
+import com.jesusLuna.polyglotCloud.exception.ForbiddenAccessException;
+import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
-import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 /**
  * Test suite for UserService security-related methods

@@ -12,7 +12,7 @@ import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
 import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
 import com.jesusLuna.polyglotCloud.models.RefreshToken;
-import com.jesusLuna.polyglotCloud.repository.Specification.RefreshTokenRepository;
+import com.jesusLuna.polyglotCloud.repository.specification.RefreshTokenRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

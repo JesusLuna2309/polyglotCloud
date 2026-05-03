@@ -16,14 +16,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.jesusLuna.polyglotCloud.DTO.UserDTO;
-import com.jesusLuna.polyglotCloud.Exception.LoginFailedException;
 import com.jesusLuna.polyglotCloud.config.SecurityProperties;
+import com.jesusLuna.polyglotCloud.dto.UserDTO;
+import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
+import com.jesusLuna.polyglotCloud.exception.LoginFailedException;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.models.enums.Role;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
-import com.jesusLuna.polyglotCloud.Security.JwtTokenProvider;
-import com.jesusLuna.polyglotCloud.Security.PostQuantumPasswordEncoder;
+import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
+import com.jesusLuna.polyglotCloud.security.PostQuantumPasswordEncoder;
 
 /**
  * Test suite for AuthService login attempts and blocking logic
@@ -214,8 +215,8 @@ class AuthServiceLoginAttemptsTest {
                 .thenReturn(testUser);
 
         // When & Then
-        com.jesusLuna.polyglotCloud.Exception.BusinessRuleException exception = 
-                assertThrows(com.jesusLuna.polyglotCloud.Exception.BusinessRuleException.class, () -> {
+        BusinessRuleException exception = 
+                assertThrows(BusinessRuleException.class, () -> {
             authService.login(request, ipAddress, userAgent);
         });
 
@@ -260,8 +261,8 @@ class AuthServiceLoginAttemptsTest {
                 .thenReturn(null);
 
         // When & Then
-        com.jesusLuna.polyglotCloud.Exception.BusinessRuleException exception = 
-                assertThrows(com.jesusLuna.polyglotCloud.Exception.BusinessRuleException.class, () -> {
+        BusinessRuleException exception = 
+                assertThrows(BusinessRuleException.class, () -> {
             authService.login(request, ipAddress, userAgent);
         });
 
