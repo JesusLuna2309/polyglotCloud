@@ -1,0 +1,21 @@
+steps:
+  - name: 'maven:3.9.6-eclipse-temurin-21'
+    entrypoint: 'mvn'
+    args: ['clean', 'package', '-DskipTests']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'Dockerfile'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/polyglot-cloud:latest'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/polyglot-cloud:${BUILD_ID}'
+      - '.'
+
+images:
+  - 'gcr.io/${PROJECT_ID}/polyglot-cloud:latest'
+  - 'gcr.io/${PROJECT_ID}/polyglot-cloud:${BUILD_ID}'
+
+timeout: '1800s'

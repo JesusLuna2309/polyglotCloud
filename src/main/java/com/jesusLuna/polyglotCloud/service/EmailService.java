@@ -93,7 +93,6 @@ public class EmailService {
             
         } catch (MessagingException | UnsupportedEncodingException e) {  // ✅ AGREGAR UnsupportedEncodingException
             log.error("Failed to send welcome email to: {}", toEmail, e);
-            // No throw exception aquí - welcome email no es crítico
         }
     }
 }
