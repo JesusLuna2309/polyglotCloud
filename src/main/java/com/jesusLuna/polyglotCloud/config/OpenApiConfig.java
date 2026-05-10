@@ -1,5 +1,7 @@
 package com.jesusLuna.polyglotCloud.config;
 
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 
 @Configuration
 public class OpenApiConfig {
@@ -17,6 +20,14 @@ public class OpenApiConfig {
         @Bean
         public OpenAPI customOpenAPI() {
         return new OpenAPI()
+                .servers(Arrays.asList(
+                        new Server()
+                        .url("https://polyglot-cloud-672786090744.us-central1.run.app")
+                        .description("Production"),
+                        new Server()
+                        .url("http://localhost:8080")
+                        .description("Local")
+                ))
                 .info(new Info()
                         .title("PolyglotCloud API")
                         .description("API REST para gestión de snippets de código con seguridad post-cuántica")

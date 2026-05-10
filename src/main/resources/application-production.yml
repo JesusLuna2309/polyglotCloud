@@ -151,6 +151,7 @@ management:
 
 # ✅ SERVER
 server:
+  forward-headers-strategy: native
   port: 8080  # Cloud Run espera puerto 8080
   compression:
     enabled: true

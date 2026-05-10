@@ -78,10 +78,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        
+        // Especifica orígenes permitidos (más seguro)
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://polyglot-cloud-672786090744.us-central1.run.app/",
+            "http://localhost:3000",
+            "http://localhost:4200",
+            "http://localhost:8080"
+        ));
+        configuration.setAllowCredentials(true);
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
