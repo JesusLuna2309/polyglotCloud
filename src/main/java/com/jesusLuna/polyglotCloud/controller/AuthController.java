@@ -88,7 +88,7 @@ public class AuthController {
                 .body(result.body());
     }
 
-    //TODO: Implementar la logica de la verificacion de email
+    //Deprecated: se mantiene por compatibilidad pero se recomienda usar verifyEmailWithCredentials
     @GetMapping("/verify-email")
     @Operation(summary = "Verify email", description = "Verifies user email with verification token")
     public ResponseEntity<UserDTO.UserResponse> verifyEmail(
@@ -100,6 +100,16 @@ public class AuthController {
         
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/verify-email-credentials")
+    @Operation(summary = "Verify email", description = "Verifies email token and validates credentials")
+    public ResponseEntity<UserDTO.UserResponse> verifyEmailWithCredentials(
+        @Valid @RequestBody UserDTO.VerifyEmailRequest request) {
+
+        log.info("Email verification request received for login: {}", request.login());
+        UserDTO.UserResponse response = authService.verifyEmailWithCredentials(request);
+        return ResponseEntity.ok(response);
+}
 
     @PostMapping("/refresh")
     @Operation(summary = "Refresh Token", description = "Uses the HttpOnly Cookie to get a new Access Token")

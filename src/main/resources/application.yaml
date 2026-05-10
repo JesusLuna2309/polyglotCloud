@@ -1,6 +1,7 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+
     
   application:
     name: polyglotCloud
@@ -51,17 +52,21 @@ spring:
   # CONFIGURACIÓN DE EMAIL
   mail:
     host: ${MAIL_HOST:smtp.mailtrap.io}
-    port: ${MAIL_PORT:2525}
+    port: ${MAIL_PORT:467}
     username: ${MAIL_USERNAME:your_email_username}
     password: ${MAIL_PASSWORD:your_email_password}
     properties:
       mail:
+        debug: true
         smtp:
           auth: true
           starttls:
             enable: true
-          ssl:
-            trust: ${MAIL_HOST:smtp.mailtrap.io}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          #ssl:
+          #  trust: ${MAIL_HOST:smtp.mailtrap.io}
 
 # ✅ CONFIGURACIÓN JWT
 app:
@@ -98,7 +103,7 @@ app:
   # CONFIGURACIÓN DE EMAIL
   email:
     from: ${EMAIL_FROM:noreply@polyglotcloud.com}
-    verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:8080/auth/verify-email}
+    verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:8085/auth/verify-email}
     support-email: ${EMAIL_SUPPORT:support@polyglotcloud.com}
 
   # CONFIGURACIÓN DE SEGURIDAD
@@ -116,3 +121,6 @@ logging:
     org.hibernate.SQL: ${LOG_LEVEL_SQL:DEBUG}
     org.flywaydb: ${LOG_LEVEL_FLYWAY:INFO}
     root: ${LOG_LEVEL_ROOT:INFO}
+
+server:
+  port: ${SERVER_PORT:8085}

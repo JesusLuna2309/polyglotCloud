@@ -7,12 +7,12 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.dto.UserDTO;
 import com.jesusLuna.polyglotCloud.dto.UserDTO.AuthResponseWithCookies;
 import com.jesusLuna.polyglotCloud.exception.BusinessRuleException;
 import com.jesusLuna.polyglotCloud.exception.LoginFailedException;
 import com.jesusLuna.polyglotCloud.exception.ResourceNotFoundException;
-import com.jesusLuna.polyglotCloud.config.SecurityProperties;
 import com.jesusLuna.polyglotCloud.models.User;
 import com.jesusLuna.polyglotCloud.repository.UserRepository;
 import com.jesusLuna.polyglotCloud.security.JwtTokenProvider;
@@ -268,8 +268,31 @@ public class AuthService {
         
         log.info("Email verified successfully for user: {}", user.getUsername());
         
+        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
         return toUserResponse(user);
     }
+
+    @Transactional
+    public UserDTO.UserResponse verifyEmailWithCredentials(UserDTO.VerifyEmailRequest request) {
+        User user = userRepository.findByUsernameOrEmailAndDeletedAtIsNull(request.login(), request.login())
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new BusinessRuleException("Invalid credentials");
+        }
+
+        if (!user.isEmailVerified()) {
+            boolean verified = user.verifyEmailToken(request.token());
+            if (!verified) {
+                throw new BusinessRuleException("Invalid or expired verification token");
+            }
+            userRepository.save(user);
+            emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
+        } else {
+            throw new BusinessRuleException("Email is already verified");
+        }
+        return toUserResponse(user);
+}
 
     @Transactional
     public UserDTO.AuthResponseWithCookies refreshTokens(String refreshTokenString, String ipAddress, String userAgent) {

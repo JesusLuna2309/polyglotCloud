@@ -71,7 +71,7 @@ public class AdminController {
         // Map to SecurityAlertResponse DTO
         Page<UserDTO.SecurityAlertResponse> response = users.map(user -> {
             boolean isLocked = user.getLockedUntil() != null && 
-                              user.getLockedUntil().isAfter(Instant.now());
+                                user.getLockedUntil().isAfter(Instant.now());
             
             return new UserDTO.SecurityAlertResponse(
                 user.getId(),

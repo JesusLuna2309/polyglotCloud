@@ -87,6 +87,17 @@ public class UserDTO {
                 Instant expiresAt
         ) {}
 
+        public record VerifyEmailRequest(
+                @NotBlank(message = "Token is required")
+                String token,
+
+                @NotBlank(message = "Username or email is required")
+                String login,
+
+                @NotBlank(message = "Password is required")
+                String password
+        ) {}
+
         public record UserUpdateRequest(
                 @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
                 String username,
