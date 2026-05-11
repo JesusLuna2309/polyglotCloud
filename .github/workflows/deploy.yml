@@ -51,24 +51,12 @@ jobs:
           docker push ${{ env.IMAGE }}:${{ github.sha }}
           docker push ${{ env.IMAGE }}:latest
 
+        
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.IMAGE }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
             --platform managed \
-            --set-env-vars \
-            CLOUD_SQL_CONNECTION_NAME="${{ secrets.CLOUD_SQL_CONNECTION_NAME }}", \
-            DB_NAME="${{ secrets.DB_NAME }}", \
-            DB_USERNAME="${{ secrets.DB_USERNAME }}", \
-            DB_PASSWORD="${{ secrets.DB_PASSWORD }}", \
-            REDIS_HOST="${{ secrets.REDIS_HOST }}", \
-            REDIS_PORT="${{ secrets.REDIS_PORT }}", \
-            JWT_SECRET="${{ secrets.JWT_SECRET }}", \
-            MAIL_HOST="${{ secrets.MAIL_HOST }}", \
-            MAIL_PORT="${{ secrets.MAIL_PORT }}", \
-            MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}", \
-            MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}", \
-            EMAIL_FROM="${{ secrets.EMAIL_FROM }}", \
-            EMAIL_SUPPORT="${{ secrets.EMAIL_SUPPORT }}" \
+            --set-env-vars="CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},DB_NAME=${{ secrets.DB_NAME }},DB_USERNAME=${{ secrets.DB_USERNAME }},DB_PASSWORD=${{ secrets.DB_PASSWORD }},REDIS_HOST=${{ secrets.REDIS_HOST }},REDIS_PORT=${{ secrets.REDIS_PORT }},JWT_SECRET=${{ secrets.JWT_SECRET }},MAIL_HOST=${{ secrets.MAIL_HOST }},MAIL_PORT=${{ secrets.MAIL_PORT }},MAIL_USERNAME=${{ secrets.MAIL_USERNAME }},MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }},EMAIL_FROM=${{ secrets.EMAIL_FROM }},EMAIL_SUPPORT=${{ secrets.EMAIL_SUPPORT }}" \
             --quiet
