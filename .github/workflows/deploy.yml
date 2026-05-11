@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - Desarrollo
+    tags:
+      - 'v*'
 
 env:
   PROJECT_ID: polyglot-cloud-app
